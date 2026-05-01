@@ -1,8 +1,6 @@
 package karl2d_gero_probe
 
-import "core:path/filepath"
 import "core:fmt"
-import "core:strings"
 import "core:math/linalg"
 import "core:os"
 import k2 "../karl2d"
