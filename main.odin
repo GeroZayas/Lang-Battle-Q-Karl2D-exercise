@@ -31,7 +31,9 @@ main :: proc(){
     my_text := read_text_from_file("./resources/text.txt")
     
     k2.init(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, "K2 - Gero")
-    sprite_python := k2.load_texture_from_bytes(#load("./resources/sprites/python-1.png"))
+    
+    sprite_python := get_sprite("python-1.png")
+    sprite_C := get_sprite("C-1")
 
     // ------------ PYTHON SPRITE
     sprite_python_src := k2.get_texture_rect(sprite_python)
