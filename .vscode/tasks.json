@@ -18,6 +18,16 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "odin: build debug",
+      "type": "shell",
+      "command": "odin",
+      "args": ["build", ".", "-debug", "-o:none", "-out:./builds/main"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ]
 }

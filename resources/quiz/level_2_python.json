@@ -1,0 +1,42 @@
+{
+  "level": 2,
+  "language": "Python",
+  "all_questions": {
+    "1": {
+      "type": "multiple_options",
+      "question": "What is the output type of len([1, 2, 3])?",
+      "answers": ["float", "string", "int", "list"],
+      "correct_answer": "int"
+    },
+    "2": {
+      "type": "multiple_options",
+      "question": "Which keyword defines a function in Python?",
+      "answers": ["func", "def", "function", "lambda"],
+      "correct_answer": "def"
+    },
+    "3": {
+      "type": "multiple_options",
+      "question": "Which data type is immutable in Python?",
+      "answers": ["list", "dict", "set", "tuple"],
+      "correct_answer": "tuple"
+    },
+    "4": {
+      "type": "multiple_options",
+      "question": "What does this expression return: 7 // 2?",
+      "answers": ["3", "3.5", "4", "2"],
+      "correct_answer": "3"
+    },
+    "5": {
+      "type": "multiple_options",
+      "question": "Which statement is used to handle exceptions?",
+      "answers": ["catch/throw", "try/except", "guard/rescue", "check/fail"],
+      "correct_answer": "try/except"
+    },
+    "6": {
+      "type": "multiple_options",
+      "question": "What is the result of this expression: [1, 2] + [3, 4]?",
+      "answers": ["[4, 6]", "[1, 2, 3, 4]", "(1, 2, 3, 4)", "Error"],
+      "correct_answer": "[1, 2, 3, 4]"
+    }
+  }
+}
