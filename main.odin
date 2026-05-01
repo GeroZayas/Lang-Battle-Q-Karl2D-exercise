@@ -4,6 +4,8 @@ import "core:fmt"
 import "core:math/linalg"
 import "core:os"
 import k2 "../karl2d"
+import "core:encoding/json"
+
 
 Rect :: k2.Rect
 Vec2 :: k2.Vec2
@@ -35,6 +37,9 @@ main :: proc(){
     sprite_Rust := get_sprite("Rust-1.png")
     sprite_Odin := get_sprite("Odin-1.png")
 
+    quiz_python_level_1 := load_json("./resources/quiz/level_1_python.json")
+    quiz_python_level_2 := load_json("./resources/quiz/level_2_python.json")
+    quiz_python_level_3 := load_json("./resources/quiz/level_3_python.json")
 
     // ------------ PYTHON SPRITE
     sprite_python_src := k2.get_texture_rect(sprite_python)
@@ -190,5 +195,17 @@ main :: proc(){
 
         k2.present()
     }
+}
+
+init :: proc(){
+
+}
+
+shutdown :: proc() {
+	k2.shutdown()
+}
+
+step :: proc() -> bool{
+    return true
 }
 
