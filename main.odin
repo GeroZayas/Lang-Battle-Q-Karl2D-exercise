@@ -19,9 +19,6 @@ settings := Settings{1200, 900}
 title_pos: k2.Vec2 = {50, 50}
 title_fs: f32 = 100
 
-sprite_python_pos: k2.Vec2 = {200, 500}
-sprite_C_pos: k2.Vec2 = {400, 500}
-
 text_pos: k2.Vec2 = {50, 150}
 text_fs: f32 = 50
 
@@ -34,7 +31,7 @@ main :: proc(){
     k2.init(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, "K2 - Gero")
     
     sprite_python := get_sprite("python-1.png")
-    sprite_C := get_sprite("C-1")
+    sprite_C := get_sprite("C-1.png")
 
     // ------------ PYTHON SPRITE
     sprite_python_src := k2.get_texture_rect(sprite_python)
