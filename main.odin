@@ -20,6 +20,7 @@ title_pos: k2.Vec2 = {50, 50}
 title_fs: f32 = 100
 
 sprite_python_pos: k2.Vec2 = {200, 500}
+sprite_C_pos: k2.Vec2 = {400, 500}
 
 text_pos: k2.Vec2 = {50, 150}
 text_fs: f32 = 50
@@ -40,9 +41,17 @@ main :: proc(){
 
     sprite_python_w := sprite_python_src.w*0.20
     sprite_python_h := sprite_python_src.h*0.23
-
     
     // ------------ END of PYTHON SPRITE
+
+
+    // ------------ C SPRITE
+    sprite_C_src := k2.get_texture_rect(sprite_C)
+
+    sprite_C_w := sprite_C_src.w*0.20
+    sprite_C_h := sprite_C_src.h*0.20
+    
+    // ------------ END of C SPRITE
     
     
     for k2.update(){
@@ -88,8 +97,14 @@ main :: proc(){
             sprite_python_pos.x, sprite_python_pos.y,
             sprite_python_w, sprite_python_h,
         }
+        
+        sprite_C_tex_dest := k2.Rect {
+            sprite_C_pos.x, sprite_C_pos.y,
+            sprite_C_w, sprite_C_h,
+        }
 
         k2.draw_texture_fit(sprite_python, sprite_python_src, sprite_python_tex_dest)
+        k2.draw_texture_fit(sprite_C, sprite_C_src, sprite_C_tex_dest)
 
 
         k2.present()
