@@ -3,6 +3,11 @@
 run: build
 	@./builds/main
 
+
+scratch-buffer: 
+	odin run scratch_buffer
+
+
 build:
 	@odin build . -out:./builds/main
 
