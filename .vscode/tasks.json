@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "odin-build-and-run",
+      "type": "shell",
+      "command": "odin build . -out:./builds/main && ./builds/main",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "odin-build",
+      "type": "shell",
+      "command": "odin build . -out:./builds/main",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}
