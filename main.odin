@@ -22,6 +22,28 @@ text_fs: f32 = 50
 
 button_text := ""
 
+sprites_textures : [10]k2.Texture
+
+Interactable_Type :: enum {
+	Enemy,
+    Quiz_Box,
+}
+
+Direction :: enum {
+	East,
+	West,
+	North,
+	South,
+}
+
+Player :: struct {
+	pos: Vec2,
+	dir: Direction,
+}
+
+player: Player
+
+
 main :: proc(){
 
     k2.init(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, "Lang Battle Q!")
@@ -36,6 +58,7 @@ main :: proc(){
     sprite_Go := get_sprite("Go-1.png")
     sprite_Rust := get_sprite("Rust-1.png")
     sprite_Odin := get_sprite("Odin-1.png")
+
 
     quiz_python_level_1 := load_json("./resources/quiz/level_1_python.json")
     quiz_python_level_2 := load_json("./resources/quiz/level_2_python.json")
@@ -199,6 +222,18 @@ main :: proc(){
 
 init :: proc(){
 
+    sprites_textures = {
+		k2.load_texture_from_bytes(#load("./resources/sprites/python-1.png")),
+		k2.load_texture_from_bytes(#load("./resources/sprites/C-1.png")),
+		k2.load_texture_from_bytes(#load("./resources/sprites/Cpp-1.png")),
+		k2.load_texture_from_bytes(#load("./resources/sprites/JS-1.png")),
+		k2.load_texture_from_bytes(#load("./resources/sprites/TS-1.png")),
+		k2.load_texture_from_bytes(#load("./resources/sprites/Java-1.png")),
+		k2.load_texture_from_bytes(#load("./resources/sprites/Assembly-1.png")),
+		k2.load_texture_from_bytes(#load("./resources/sprites/Go-1.png")),
+		k2.load_texture_from_bytes(#load("./resources/sprites/Rust-1.png")),
+		k2.load_texture_from_bytes(#load("./resources/sprites/Odin-1.png")),
+	}
 }
 
 shutdown :: proc() {

@@ -6,8 +6,9 @@ import "core:encoding/json"
 import "core:fmt"
 
 
-QUIZ_PATH :: "./resources/quiz"
+// ---------- STRUCTS 
 
+QUIZ_PATH :: "./resources/quiz"
 
 Question_elem :: struct {
     type: string,
@@ -16,13 +17,13 @@ Question_elem :: struct {
     correct_answer : string
 }
 
-
 Quiz_Doc :: struct {
     level: int,    
     language: string,
     all_questions: map[string]Question_elem   
 }
 
+// ---------- PROCEDURES
 
 load_json :: proc(path: string) -> Quiz_Doc {
     data, err := os.read_entire_file(path, context.allocator)
