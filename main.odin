@@ -15,10 +15,9 @@ Rect :: k2.Rect
 Vec2 :: k2.Vec2
 Tex :: k2.Texture
 
-CLEAR_COLOR: k2.Color = {43, 42, 44, 1}
-INTRO_COLOR: k2.Color = k2.RL_BLANK
-QUIZ_COLOR: k2.Color = k2.DARK_BLUE
-
+CLEAR_COLOR: k2.Color = {43, 42, 44, 250}
+INTRO_COLOR: k2.Color = {1, 32, 46, 250}
+QUIZ_COLOR: k2.Color = {46, 20, 1, 250}
 settings := Settings{1024, 900}
 
 title_text_value := "Lang Battle Q!"
