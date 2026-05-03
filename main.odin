@@ -46,6 +46,7 @@ Enemy :: struct {
 }
 
 Quiz_Box :: struct {
+    index : int,
     questions: string,
     tex: k2.Texture,
     pos: k2.Vec2,
@@ -229,10 +230,10 @@ init :: proc(){
 
     append(
         &quiz_boxes.boxes_array, 
-        Quiz_Box{questions="Q1", tex=quiz_box_tex, pos=rand_position_set.positions[0]},
-        Quiz_Box{questions="Q2", tex=quiz_box_tex, pos=rand_position_set.positions[1]},
-        Quiz_Box{questions="Q3", tex=quiz_box_tex, pos=rand_position_set.positions[2]},
-        Quiz_Box{questions="Q4", tex=quiz_box_tex, pos=rand_position_set.positions[3]},
+        Quiz_Box{index=0, questions="Q1", tex=quiz_box_tex, pos=rand_position_set.positions[0]},
+        Quiz_Box{index=2, questions="Q2", tex=quiz_box_tex, pos=rand_position_set.positions[1]},
+        Quiz_Box{index=3, questions="Q3", tex=quiz_box_tex, pos=rand_position_set.positions[2]},
+        Quiz_Box{index=4, questions="Q4", tex=quiz_box_tex, pos=rand_position_set.positions[3]},
     )
 
     fmt.println(quiz_boxes)
@@ -349,14 +350,19 @@ update :: proc() {
             }
 
             overlap, overlapping := k2.rect_overlap(pc, c)
-
+        
+            // ------------------------------------------------------------------------
+            // --> COLLISION with QUIZ BOX <--
+            // ------------------------------------------------------------------------
             if overlapping && overlap.w != 0 {
-                sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -1 : 1
+                sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -5 : 5
                 fix := overlap.w * sign 
                 player.pos.x += fix
                 k2.play_sound(audio_player_hit)
                 screen_state = .Quiz_Popup
             }
+            // ------------------------------------------------------------------------
+
         }
 
         player.pos.x += to_move.x
@@ -365,16 +371,21 @@ update :: proc() {
             pc := calc_player_collider(player.pos)
             overlap, overlapping := k2.rect_overlap(pc, c)
 
+            // ------------------------------------------------------------------------
+            // --> COLLISION with QUIZ BOX <--
+            // ------------------------------------------------------------------------
             if overlapping && overlap.h != 0 {
-                sign: f32 = pc.y + pc.h / 2 < (c.y + c.h / 2) ? -1 : 1
+                sign: f32 = pc.y + pc.h / 2 < (c.y + c.h / 2) ? -5 : 5
                 fix := overlap.h * sign
                 player.pos.y += fix
+                k2.play_sound(audio_player_hit)
+                screen_state = .Quiz_Popup
             }
         }
 
         player.pos.y += to_move.y
     } else if screen_state == .Quiz_Popup {
-        show_quiz_screen()
+        show_quiz_screen("hello")
     } else if screen_state == .Intro {
         show_intro_screen()
     } 
@@ -414,14 +425,24 @@ ui_debug_options :: proc(){
 }
 
 
-show_quiz_screen :: proc(){
+show_quiz_screen :: proc(text: any){
     k2.clear(QUIZ_COLOR)
     k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_RED)
 
     // popup simple dentro de la misma ventana
-    k2.draw_rect({200, 150, 800, 500}, k2.BROWN)
-    k2.draw_text("Open Quiz", {260, 220}, 40, k2.WHITE)
-    k2.draw_text("Hit ESC to close", {260, 280}, 24, k2.YELLOW)
+    k2.draw_rect(
+        {
+            f32(settings.SCREEN_WIDTH) * 0.10, 
+            f32(settings.SCREEN_HEIGHT) * 0.10,  
+            f32(settings.SCREEN_WIDTH) * 0.80,  
+            f32(settings.SCREEN_HEIGHT) * 0.80
+        },
+        k2.DARK_RED
+    )
+    k2.draw_text("QUIZ Time...", {f32(settings.SCREEN_WIDTH) * 0.11, f32(settings.SCREEN_HEIGHT) * 0.11}, 40, k2.WHITE)
+    k2.draw_text("Hit ESC to close", {f32(settings.SCREEN_WIDTH) - 300 , f32(settings.SCREEN_HEIGHT) - 50}, 25, k2.YELLOW)
+
+    k2.draw_text("test", {200, 150}, 30 , k2.WHITE)
 
     if k2.key_went_down(.Escape) {
         k2.play_sound(audio_player_hit)
