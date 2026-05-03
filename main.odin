@@ -20,7 +20,7 @@ settings := Settings{1200, 900}
 
 title_text_value := "Lang Battle Q!"
 title_pos: k2.Vec2 = {50, 10}
-title_fs: f32 = 70
+title_fs: f32 = 30
 
 text_pos: k2.Vec2 = {50, 150}
 text_fs: f32 = 50
@@ -78,9 +78,12 @@ main :: proc() {
 	mem.tracking_allocator_init(&track, context.allocator)
 	context.allocator = mem.tracking_allocator(&track)
 
+    // ------------------------------------------------------------------------
+    // THE MAIN LOOP
 	init()
 	for step() {}
 	shutdown()
+    // ------------------------------------------------------------------------
 
 	if len(track.allocation_map) > 0 {
 		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
@@ -96,25 +99,33 @@ init :: proc(){
     current_level_idx = 0
 
     intro = true
-    
+
+    // ------------------------------------------------------------------------
+    // LOADING THE JSON WITH THE QUESTIONS AND ANSWERS
     quiz_python_level_1 := load_json("./resources/quiz/level_1_python.json")
     quiz_python_level_2 := load_json("./resources/quiz/level_2_python.json")
     quiz_python_level_3 := load_json("./resources/quiz/level_3_python.json")
-
+    
     player_tex := k2.load_texture_from_bytes(#load("./resources/sprites/python-small-v2.png"))
     quiz_box_tex := k2.load_texture_from_bytes(#load("./resources/textures/quiz-box-cpq-v1-small.png"))
-
+    
+    
+    // ------------------------------------------------------------------------
+    // Our MAIN PLAYER
     player = {
         tex     = player_tex,
         pos     = {100,400},
         lives   = 3
 	}
 
+    // alias for convenience:
     grpiw :: get_random_pos_in_world
     world_dim : k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
 
     position_set_avail :[3]Position_Set = {position_set_1, position_set_2, position_set_3}
 
+    // We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them 
+    // and draw in those positions
     rand_position_set := rand.choice(position_set_avail[:])
 
     append(
@@ -127,11 +138,12 @@ init :: proc(){
 
     fmt.println(quiz_boxes)
 
-    
+    // ------------------------------------------------------------------------
+    // Random position in the world, for when needed    
     random_pos := get_random_pos_in_world(world_dim)
-    fmt.printfln("This is random pos %v", random_pos)
 
-
+    // ------------------------------------------------------------------------
+    // Textures for Enemies
     enemy_sprites_textures = {
 		k2.load_texture_from_bytes(#load("./resources/sprites/C-1.png")),
 		k2.load_texture_from_bytes(#load("./resources/sprites/Cpp-1.png")),
@@ -143,6 +155,8 @@ init :: proc(){
 		k2.load_texture_from_bytes(#load("./resources/sprites/Rust-1.png")),
 		k2.load_texture_from_bytes(#load("./resources/sprites/Odin-1.png")),
 	}
+    // ------------------------------------------------------------------------
+
 }
 
 
@@ -157,7 +171,6 @@ step :: proc() -> bool{
     
     return true
 }
-
 
 update :: proc() {
 
@@ -208,6 +221,11 @@ draw :: proc() {
 
 
 shutdown :: proc() {
+
+	for tex in enemy_sprites_textures {
+		k2.destroy_texture(tex)	
+	}
+
 	k2.shutdown()
 }
 
