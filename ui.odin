@@ -6,37 +6,7 @@ import k2 "../karl2d"
 
 
 Position_Set :: struct {
-	positions : [dynamic]k2.Vec2
-}
-
-screen_w := f32(settings.SCREEN_WIDTH)
-screen_h := f32(settings.SCREEN_HEIGHT)
-
-position_set_1 := Position_Set{
-	positions = {
-		{screen_w * 0.10, screen_h * 0.20},
-		{screen_w * 0.20, screen_h * 0.55},
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-	}
-}
-
-position_set_2 := Position_Set{
-	positions = {
-		{screen_w * 0.23, screen_h * 0.23},
-		{screen_w * 0.71, screen_h * 0.57},
-		{screen_w * 0.47, screen_h * 0.88},
-		{screen_w * 0.91, screen_h * 0.13},
-	}
-}
-
-position_set_3 := Position_Set{
-    positions = {
-        {screen_w * 0.12, screen_h * 0.88},
-        {screen_w * 0.38, screen_h * 0.72},
-        {screen_w * 0.66, screen_h * 0.28},
-        {screen_w * 0.84, screen_h * 0.54},
-    }
+	positions : [4]k2.Vec2
 }
 
 

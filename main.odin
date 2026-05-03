@@ -1,11 +1,13 @@
 package Lang_Battle_Q_game
 
+import "vendor:commonmark"
 import "core:fmt"
 import "core:math/linalg"
 import "core:math/rand"
 import "core:os"
 import k2 "../karl2d"
 import "core:encoding/json"
+import "core:log"
 import "core:mem"
 
 
@@ -14,10 +16,10 @@ Vec2 :: k2.Vec2
 Tex :: k2.Texture
 
 CLEAR_COLOR: k2.Color = {43, 42, 44, 1}
-INTRO_COLOR: k2.Color = k2.RL_BLUE
+INTRO_COLOR: k2.Color = k2.RL_BLANK
 QUIZ_COLOR: k2.Color = k2.DARK_BLUE
 
-settings := Settings{1200, 900}
+settings := Settings{1024, 900}
 
 title_text_value := "Lang Battle Q!"
 title_pos: k2.Vec2 = {50, 10}
@@ -49,6 +51,15 @@ Quiz_Box :: struct {
     pos: k2.Vec2,
 }
 
+Game_Title_Texture :: struct {
+    tex: k2.Texture,
+    pos: k2.Vec2,
+}
+
+Background_Texture :: struct {
+    tex: k2.Texture,
+}
+
 Quiz_Boxes :: struct {
     boxes_array: [dynamic]Quiz_Box
 }
@@ -76,7 +87,7 @@ Screen_State :: enum {
 
 screen_state := Screen_State.Intro
 
-PLAYER_VELOCITY: f32 = 200
+PLAYER_VELOCITY: f32 = 300
 
 game_finished: bool
 
@@ -90,11 +101,30 @@ intro: bool
 
 world_dim : k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
 
+// ------------------------------------------------------------------------
+// TEXTURES FOR INTRO SCREEN
+intro_title_game : Game_Title_Texture
+background_intro : Background_Texture
+
+// ------------------------------------------------------------------------
+// AUDIOS
+audio_player_hit: k2.Sound
+audio_intro_music: k2.Audio_Buffer
+audio_quiz_correct: k2.Audio_Buffer
+audio_quiz_wrong: k2.Audio_Buffer
+
+
+
+// ------------------------------------------------------------------------
+// PROCEDURES
+// ------------------------------------------------------------------------
+
 main :: proc() {
 	track: mem.Tracking_Allocator
 	mem.tracking_allocator_init(&track, context.allocator)
 	context.allocator = mem.tracking_allocator(&track)
 
+    context.logger = log.create_console_logger()
     // ------------------------------------------------------------------------
     // THE MAIN LOOP
 	init()
@@ -112,21 +142,64 @@ main :: proc() {
 }
 
 init :: proc(){
-    k2.init(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, "Lang Battle Q!", options = {window_mode = .Windowed_Resizable})
+    k2.init(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, "Lang Battle Q!", options = {window_mode = .Windowed})
     current_level_idx = 0
 
     intro = true
+
+    screen_w := f32(settings.SCREEN_WIDTH)
+    screen_h := f32(settings.SCREEN_HEIGHT)
+
+    position_set_1 := Position_Set{
+        positions = {
+            {screen_w * 0.10, screen_h * 0.20},
+            {screen_w * 0.20, screen_h * 0.55},
+            {screen_w * 0.68, screen_h * 0.30},
+            {screen_w * 0.90, screen_h * 0.85},
+        }
+    }
+
+    position_set_2 := Position_Set{
+        positions = {
+            {screen_w * 0.23, screen_h * 0.23},
+            {screen_w * 0.71, screen_h * 0.57},
+            {screen_w * 0.47, screen_h * 0.88},
+            {screen_w * 0.91, screen_h * 0.13},
+        }
+    }
+
+    position_set_3 := Position_Set{
+        positions = {
+            {screen_w * 0.12, screen_h * 0.88},
+            {screen_w * 0.38, screen_h * 0.72},
+            {screen_w * 0.66, screen_h * 0.28},
+            {screen_w * 0.84, screen_h * 0.54},
+        }
+    }
 
     // ------------------------------------------------------------------------
     // LOADING THE JSON WITH THE QUESTIONS AND ANSWERS
     quiz_python_level_1 := load_json("./resources/quiz/level_1_python.json")
     quiz_python_level_2 := load_json("./resources/quiz/level_2_python.json")
     quiz_python_level_3 := load_json("./resources/quiz/level_3_python.json")
-    
+
+    quiz_documents.docs[0] = quiz_python_level_1
+    quiz_documents.docs[0] = quiz_python_level_2
+    quiz_documents.docs[0] = quiz_python_level_3
+
     player_tex := k2.load_texture_from_bytes(#load("./resources/sprites/python-small-v2.png"))
     quiz_box_tex := k2.load_texture_from_bytes(#load("./resources/textures/quiz-box-cpq-v1-small.png"))
+    intro_title_game_tex := k2.load_texture_from_bytes(#load("./resources/textures/title-game-big.png"))
+    background_intro_tex := k2.load_texture_from_bytes(#load("./resources/textures/intro-fondo-v1-smaller.png"))
     
     
+    // ------------------------------------------------------------------------
+    // AUDIOS and SOUNDS
+	audio_player_hit = k2.load_sound_from_bytes(#load("./resources/audios/floraphonic-arcade-ui-6-229503.wav"))
+    log.debug(audio_player_hit)
+	// audio_intro_music = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
+	// audio_quiz_correct = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
+	// audio_quiz_wrong = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
     // ------------------------------------------------------------------------
     // Our MAIN PLAYER
     player = {
@@ -134,6 +207,15 @@ init :: proc(){
         pos     = {100,400},
         lives   = 3
 	}
+
+    intro_title_game =  {
+        tex     = intro_title_game_tex,
+        pos     = {0, 0}
+    }
+
+    background_intro =  {
+        tex     = background_intro_tex,
+    }
 
     // alias for convenience:
     grpiw :: get_random_pos_in_world
@@ -197,8 +279,12 @@ update :: proc() {
 
     if screen_state == .Game {
         k2.clear(CLEAR_COLOR)
+
+        k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_BLUE)
+
+
         k2.draw_text(title_text_value, title_pos, title_fs, k2.LIGHT_YELLOW)
-        
+
         if button_text != "" {
             k2.draw_text(button_text, k2.Vec2{50, 450}, 30, k2.RED)
         }
@@ -243,7 +329,11 @@ update :: proc() {
 
         for box in quiz_boxes.boxes_array {
             k2.draw_texture(box.tex, box.pos, origin = k2.rect_center(k2.get_texture_rect(box.tex)))
-            box_rect := k2.rect_from_pos_size({box.pos[0] - f32(box.tex.width)/4, box.pos[1]- 5 - f32(box.tex.height)/4}, {f32(box.tex.width)/2,f32(box.tex.height)/2})
+            box_rect := k2.rect_from_pos_size(
+                {box.pos[0] - f32(box.tex.width)/4, 
+                box.pos[1]- 5 - f32(box.tex.height)/4}, 
+                {f32(box.tex.width)/2,f32(box.tex.height)/2}
+            )
             if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
             append(&colliders, box_rect)
         }
@@ -264,6 +354,7 @@ update :: proc() {
                 sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -1 : 1
                 fix := overlap.w * sign 
                 player.pos.x += fix
+                k2.play_sound(audio_player_hit)
                 screen_state = .Quiz_Popup
             }
         }
@@ -301,10 +392,11 @@ shutdown :: proc() {
 	for tex in enemy_sprites_textures {
 		k2.destroy_texture(tex)	
 	}
+    
+    k2.destroy_sound(audio_player_hit)
 
 	k2.shutdown()
 }
-
 
 ui_debug_options :: proc(){
 
@@ -312,7 +404,7 @@ ui_debug_options :: proc(){
     text_size: f32 = 40 
     text_mesg := " - THIS IS DEBUG UI MODE - "
     text_width := k2.measure_text(text_mesg, text_size)
-    k2.draw_text(text_mesg, {f32(screen_w / 2) - f32(text_width.x / 2), 20}, text_size, k2.YELLOW)
+    k2.draw_text(text_mesg, {f32(world_dim[0] / 2) - f32(text_width.x / 2), 20}, text_size, k2.YELLOW)
     for text_size < 60 {
         text_size += 2
     }
@@ -324,12 +416,15 @@ ui_debug_options :: proc(){
 
 show_quiz_screen :: proc(){
     k2.clear(QUIZ_COLOR)
+    k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_RED)
+
     // popup simple dentro de la misma ventana
     k2.draw_rect({200, 150, 800, 500}, k2.BROWN)
     k2.draw_text("Open Quiz", {260, 220}, 40, k2.WHITE)
     k2.draw_text("Hit ESC to close", {260, 280}, 24, k2.YELLOW)
 
     if k2.key_went_down(.Escape) {
+        k2.play_sound(audio_player_hit)
         screen_state = .Game
     }
 }
@@ -337,10 +432,18 @@ show_quiz_screen :: proc(){
 
 show_intro_screen :: proc(){
     k2.clear(INTRO_COLOR)
-    // popup simple dentro de la misma ventana
-    k2.draw_rect({200, 150, 800, 500}, k2.BROWN)
-    k2.draw_text("WELCOME TO LANG BATTLE q!", {260, 220}, 100, k2.WHITE)
-    k2.draw_text("Hit ENTER to play!", {260, 280}, 24, k2.YELLOW)
+    
+    // FONDO / Brackground
+    k2.draw_texture(background_intro.tex, {0,0})
+
+    k2.draw_text("Hit ENTER to play!!", {260, 10}, 50, k2.YELLOW)
+    
+    title_image_pos : k2.Vec2 = { 
+        f32(settings.SCREEN_WIDTH / 2 - intro_title_game.tex.width/2), 
+        f32(settings.SCREEN_HEIGHT / 2  - intro_title_game.tex.height/2) 
+    }
+    k2.draw_texture(intro_title_game.tex, title_image_pos)
+
 
     if k2.key_went_down(.Enter) {
         screen_state = .Game

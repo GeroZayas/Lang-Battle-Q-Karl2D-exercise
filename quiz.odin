@@ -17,6 +17,13 @@ Question_elem :: struct {
     correct_answer : string
 }
 
+
+Quiz_Documents :: struct {
+    docs: [3]Quiz_Doc
+}
+
+quiz_documents: Quiz_Documents
+
 Quiz_Doc :: struct {
     level: int,    
     language: string,
