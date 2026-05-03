@@ -15,6 +15,7 @@ Tex :: k2.Texture
 
 CLEAR_COLOR: k2.Color = {43, 42, 44, 1}
 INTRO_COLOR: k2.Color = k2.RL_BLUE
+QUIZ_COLOR: k2.Color = k2.DARK_BLUE
 
 settings := Settings{1200, 900}
 
@@ -70,9 +71,10 @@ Player :: struct {
 Screen_State :: enum {
     Game,
     Quiz_Popup,
+    Intro,
 }
 
-screen_state := Screen_State.Game
+screen_state := Screen_State.Intro
 
 PLAYER_VELOCITY: f32 = 200
 
@@ -282,7 +284,9 @@ update :: proc() {
         player.pos.y += to_move.y
     } else if screen_state == .Quiz_Popup {
         show_quiz_screen()
-    }
+    } else if screen_state == .Intro {
+        show_intro_screen()
+    } 
 
     k2.present()
 }
@@ -319,7 +323,7 @@ ui_debug_options :: proc(){
 
 
 show_quiz_screen :: proc(){
-    k2.clear(INTRO_COLOR)
+    k2.clear(QUIZ_COLOR)
     // popup simple dentro de la misma ventana
     k2.draw_rect({200, 150, 800, 500}, k2.BROWN)
     k2.draw_text("Open Quiz", {260, 220}, 40, k2.WHITE)
@@ -330,6 +334,18 @@ show_quiz_screen :: proc(){
     }
 }
 
+
+show_intro_screen :: proc(){
+    k2.clear(INTRO_COLOR)
+    // popup simple dentro de la misma ventana
+    k2.draw_rect({200, 150, 800, 500}, k2.BROWN)
+    k2.draw_text("WELCOME TO LANG BATTLE q!", {260, 220}, 100, k2.WHITE)
+    k2.draw_text("Hit ENTER to play!", {260, 280}, 24, k2.YELLOW)
+
+    if k2.key_went_down(.Enter) {
+        screen_state = .Game
+    }
+}
 
 get_random_pos_in_world :: proc(world_dimensions: k2.Vec2) -> k2.Vec2 {
     width := world_dimensions[0]
