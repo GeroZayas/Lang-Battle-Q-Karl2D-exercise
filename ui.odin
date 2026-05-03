@@ -67,10 +67,10 @@ inset_rect :: proc(r: Rect, x: f32, y: f32) -> Rect {
 
 calc_player_collider :: proc(player_pos: Vec2) -> k2.Rect {
 	return {
-		player_pos.x - 5,
-		player_pos.y - 70,
-		10,
-		10,
+		player_pos.x - 30,
+		player_pos.y - 90,
+		50,
+		50,
 	}
 }
 

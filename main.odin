@@ -1,3 +1,5 @@
+#+feature dynamic-literals
+
 package Lang_Battle_Q_game
 
 import "vendor:commonmark"
@@ -29,7 +31,7 @@ text_fs: f32 = 50
 
 button_text := ""
 
-enemy_sprites_textures : [9]k2.Texture
+enemy_sprites_textures : map[string]k2.Texture
 
 UI_DEBUG := false
 
@@ -41,7 +43,9 @@ Interactable_Type :: enum {
 Enemy :: struct {
     tex: k2.Texture,
     name: string,
-    unique_power: any
+    unique_power: any,
+    pos: k2.Vec2,
+    dir: Direction,
 }
 
 Quiz_Box :: struct {
@@ -87,17 +91,23 @@ Screen_State :: enum {
     Game,
     Quiz_Popup,
     Intro,
+    Game_Over,
 }
+
+answered_questions:[dynamic]string
 
 screen_state := Screen_State.Intro
 
 PLAYER_VELOCITY: f32 = 300
+ENEMY_SPEED: u8 = 5
 
 game_finished: bool
 
 current_level_idx: int
 
 player: Player
+
+odin : Enemy
 
 quiz_boxes : Quiz_Boxes
 
@@ -110,6 +120,7 @@ world_dim : k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
 intro_title_game : Game_Title_Texture
 background_intro : Background_Texture
 quiz_time_text : Background_Texture
+you_died_text : Background_Texture
 
 // ------------------------------------------------------------------------
 // AUDIOS
@@ -184,20 +195,44 @@ init :: proc(){
 
     // ------------------------------------------------------------------------
     // LOADING THE JSON WITH THE QUESTIONS AND ANSWERS
-    quiz_python_level_1 := load_json("./resources/quiz/level_1_python.json")
-    quiz_python_level_2 := load_json("./resources/quiz/level_2_python.json")
-    quiz_python_level_3 := load_json("./resources/quiz/level_3_python.json")
-
-    quiz_documents.docs[0] = quiz_python_level_1
-    quiz_documents.docs[0] = quiz_python_level_2
-    quiz_documents.docs[0] = quiz_python_level_3
 
     player_tex := k2.load_texture_from_bytes(#load("./resources/sprites/python-small-v2.png"))
     quiz_box_tex := k2.load_texture_from_bytes(#load("./resources/textures/quiz-box-cpq-v1-small.png"))
     intro_title_game_tex := k2.load_texture_from_bytes(#load("./resources/textures/title-game-big.png"))
     background_intro_tex := k2.load_texture_from_bytes(#load("./resources/textures/intro-fondo-v1-smaller.png"))
     quiz_time_text_tex := k2.load_texture_from_bytes(#load("./resources/textures/quiz-time-text-small.png"))
+    game_over_text_tex := k2.load_texture_from_bytes(#load("./resources/textures/you-died-medium-cropped.png"))
+
+     // ------------------------------------------------------------------------
+    // Random position in the world, for when needed    
+    random_pos := get_random_pos_in_world(world_dim)
+
+    // ------------------------------------------------------------------------
+    // Textures for Enemies
+    // enemy_sprites_textures = {
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/C-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Cpp-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/JS-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/TS-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Java-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Assembly-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Go-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Rust-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Odin-1.png")),
+	// }
+
+    enemy_sprites_textures = {
+		"Odin" = k2.load_texture_from_bytes(#load("./resources/sprites/odin-small-v1.png")),
+	}
+    // ------------------------------------------------------------------------
     
+    odin = {    
+        tex = enemy_sprites_textures["Odin"],
+        name = "Odin",
+        unique_power = "Hellope Power",
+        pos = get_random_pos_in_world(world_dim),
+        dir = .East
+    }
     
     // ------------------------------------------------------------------------
     // AUDIOS and SOUNDS
@@ -210,7 +245,7 @@ init :: proc(){
     // Our MAIN PLAYER
     player = {
         tex     = player_tex,
-        pos     = {100,400},
+        pos     = {500,450},
         lives   = 3
 	}
 
@@ -226,6 +261,11 @@ init :: proc(){
     quiz_time_text =  {
         tex     = quiz_time_text_tex,
     }
+
+    you_died_text =  {
+        tex     = game_over_text_tex,
+    }
+    
 
     // alias for convenience:
     grpiw :: get_random_pos_in_world
@@ -247,24 +287,7 @@ init :: proc(){
 
     fmt.println(quiz_boxes)
 
-    // ------------------------------------------------------------------------
-    // Random position in the world, for when needed    
-    random_pos := get_random_pos_in_world(world_dim)
-
-    // ------------------------------------------------------------------------
-    // Textures for Enemies
-    enemy_sprites_textures = {
-		k2.load_texture_from_bytes(#load("./resources/sprites/C-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Cpp-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/JS-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/TS-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Java-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Assembly-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Go-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Rust-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Odin-1.png")),
-	}
-    // ------------------------------------------------------------------------
+   
 
 }
 
@@ -299,7 +322,8 @@ update :: proc() {
             k2.draw_text(button_text, k2.Vec2{50, 450}, 30, k2.RED)
         }
 
-        movement: Vec2
+        player_movement: Vec2
+        odin_movement: Vec2
 
         if k2.key_went_down(.F2) do UI_DEBUG = !UI_DEBUG
 
@@ -308,32 +332,32 @@ update :: proc() {
         }
 
         if k2.key_is_held(.Up) {
-            movement.y -= 1
+            player_movement.y -= 1
         }
         if k2.key_is_held(.Down) {
-            movement.y += 1
+            player_movement.y += 1
         }
         if k2.key_is_held(.Left) {
-            movement.x -= 1
+            player_movement.x -= 1
         }
         if k2.key_is_held(.Right) {
-            movement.x += 1
+            player_movement.x += 1
         }
 
-        movement = linalg.normalize0(movement)
+        player_movement = linalg.normalize0(player_movement)
 
-        if movement.x > 0 {
+        if player_movement.x > 0 {
             player.dir = .East
-        } else if movement.x < 0 {
+        } else if player_movement.x < 0 {
             player.dir = .West
-        } else if movement.y > 0 {
+        } else if player_movement.y > 0 {
             player.dir = .South
-        } else if movement.y < 0 {
+        } else if player_movement.y < 0 {
             player.dir = .North
         }
 
         dt := k2.get_frame_time()
-        to_move := movement * dt * PLAYER_VELOCITY
+        to_move := player_movement * dt * PLAYER_VELOCITY
 
         colliders := make([dynamic]k2.Rect, context.temp_allocator)
 
@@ -348,7 +372,20 @@ update :: proc() {
             append(&colliders, box_rect)
         }
 
+        // -------------------------------- PLAYER -------------------------------------------------------------
         k2.draw_texture(player.tex, player.pos, origin = k2.rect_bottom_middle(k2.get_texture_rect(player.tex)))
+        // -----------------------------------------------------------------------------------------------------
+
+
+        // --------------------------------- ENEMIES --------------------------------------------------------
+        // ODIN ENEMY
+        k2.draw_texture(odin.tex, odin.pos, origin = k2.rect_bottom_middle(k2.get_texture_rect(player.tex)))
+        // OTHER
+        {
+
+        }
+        // ---------------------------------------------------------------------------------------------------
+
 
         for c in colliders {
             pc := calc_player_collider(player.pos)
@@ -364,7 +401,7 @@ update :: proc() {
             // --> COLLISION with QUIZ BOX <--
             // ------------------------------------------------------------------------
             if overlapping && overlap.w != 0 {
-                sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -5 : 5
+                sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -2 : 2
                 fix := overlap.w * sign 
                 player.pos.x += fix
                 k2.play_sound(audio_player_hit)
@@ -384,7 +421,7 @@ update :: proc() {
             // --> COLLISION with QUIZ BOX <--
             // ------------------------------------------------------------------------
             if overlapping && overlap.h != 0 {
-                sign: f32 = pc.y + pc.h / 2 < (c.y + c.h / 2) ? -5 : 5
+                sign: f32 = pc.y + pc.h / 2 < (c.y + c.h / 2) ? -2 : 2
                 fix := overlap.h * sign
                 player.pos.y += fix
                 k2.play_sound(audio_player_hit)
@@ -393,11 +430,44 @@ update :: proc() {
         }
 
         player.pos.y += to_move.y
+
+        // ------------------------------------------------------------------------
+
+        
+        if odin.dir == .East && odin.pos.x > f32(settings.SCREEN_WIDTH) {
+            odin.pos.x = 0
+            odin.pos.y = f32(rand.int_range(20, settings.SCREEN_HEIGHT))
+        }
+
+        // ENEMY MOVEMENT
+        odin.pos.x += f32(ENEMY_SPEED)
+
+        pc := calc_player_collider(player.pos)
+        
+        // ------------------------------------------------------------------------
+        // CHECK COLLISION WITH ENEMY
+        // ------------------------------------------------------------------------
+        odin_c := calc_player_collider(odin.pos)
+        overlap, overlapping := k2.rect_overlap(pc, odin_c)
+        
+        if overlapping && overlap.h != 0 {
+            screen_state = .Game_Over
+        }
+        // ------------------------------------------------------------------------
+
+
+
     } else if screen_state == .Quiz_Popup {
-        show_quiz_screen("hello")
+
+        show_quiz_screen("place holder for quiz question")
+
     } else if screen_state == .Intro {
         show_intro_screen()
-    } 
+    
+    } else if screen_state == .Game_Over {
+            game_over_screen()
+    }
+
 
     k2.present()
 }
@@ -409,9 +479,9 @@ draw :: proc() {
 
 shutdown :: proc() {
 
-	for tex in enemy_sprites_textures {
-		k2.destroy_texture(tex)	
-	}
+	// for tex in enemy_sprites_textures {
+	// 	k2.destroy_texture(tex)	
+	// }
     
     k2.destroy_sound(audio_player_hit)
 
@@ -434,7 +504,7 @@ ui_debug_options :: proc(){
 }
 
 
-show_quiz_screen :: proc(text: any){
+show_quiz_screen :: proc(text: string){
     k2.clear(QUIZ_COLOR)
     k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_RED)
 
@@ -454,7 +524,7 @@ show_quiz_screen :: proc(text: any){
     
     k2.draw_text("Hit ESC to close", {f32(settings.SCREEN_WIDTH) - 300 , f32(settings.SCREEN_HEIGHT) - 50}, 25, k2.YELLOW)
 
-    k2.draw_text("test", {200, 150}, 30 , k2.WHITE)
+    k2.draw_text(text, {200, 150}, 30 , k2.WHITE)
 
     if k2.key_went_down(.Escape) {
         k2.play_sound(audio_player_hit)
@@ -491,8 +561,27 @@ get_random_pos_in_world :: proc(world_dimensions: k2.Vec2) -> k2.Vec2 {
     height := world_dimensions[1]
 
     random_pos : k2.Vec2
-    random_pos[0] = rand.float32_range(20, width)
-    random_pos[1] = rand.float32_range(20, height)
+    random_pos[0] = rand.float32_range(50, width)
+    random_pos[1] = rand.float32_range(50, height)
 
     return random_pos
+}
+
+game_over_screen :: proc(){
+    k2.clear(k2.BLACK)
+    k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_GREEN)
+
+
+    k2.draw_texture(
+        you_died_text.tex, 
+        {
+            f32(settings.SCREEN_WIDTH/2 - you_died_text.tex.width /2),
+            f32(settings.SCREEN_HEIGHT/2 - you_died_text.tex.height /2)
+        }
+    )
+    
+    if k2.key_went_down(.Enter) {
+        player.pos   = get_random_pos_in_world(world_dim)
+        screen_state = .Intro
+    }
 }
