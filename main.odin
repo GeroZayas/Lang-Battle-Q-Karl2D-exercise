@@ -20,9 +20,9 @@ INTRO_COLOR: k2.Color = {1, 32, 46, 250}
 QUIZ_COLOR: k2.Color = {46, 20, 1, 250}
 settings := Settings{1024, 900}
 
-title_text_value := "Lang Battle Q!"
+title_text_value := "Go to the CPQs and Answer the Questions before getting caught!"
 title_pos: k2.Vec2 = {50, 10}
-title_fs: f32 = 30
+title_fs: f32 = 20
 
 text_pos: k2.Vec2 = {50, 150}
 text_fs: f32 = 50
@@ -79,6 +79,10 @@ Player :: struct {
 }
 
 
+Score :: struct {
+    
+}
+
 Screen_State :: enum {
     Game,
     Quiz_Popup,
@@ -105,6 +109,7 @@ world_dim : k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
 // TEXTURES FOR INTRO SCREEN
 intro_title_game : Game_Title_Texture
 background_intro : Background_Texture
+quiz_time_text : Background_Texture
 
 // ------------------------------------------------------------------------
 // AUDIOS
@@ -142,7 +147,7 @@ main :: proc() {
 }
 
 init :: proc(){
-    k2.init(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, "Lang Battle Q!", options = {window_mode = .Windowed})
+    k2.init(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, "Lang Battle Q!", options = {window_mode = .Windowed_Resizable})
     current_level_idx = 0
 
     intro = true
@@ -191,6 +196,7 @@ init :: proc(){
     quiz_box_tex := k2.load_texture_from_bytes(#load("./resources/textures/quiz-box-cpq-v1-small.png"))
     intro_title_game_tex := k2.load_texture_from_bytes(#load("./resources/textures/title-game-big.png"))
     background_intro_tex := k2.load_texture_from_bytes(#load("./resources/textures/intro-fondo-v1-smaller.png"))
+    quiz_time_text_tex := k2.load_texture_from_bytes(#load("./resources/textures/quiz-time-text-small.png"))
     
     
     // ------------------------------------------------------------------------
@@ -215,6 +221,10 @@ init :: proc(){
 
     background_intro =  {
         tex     = background_intro_tex,
+    }
+
+    quiz_time_text =  {
+        tex     = quiz_time_text_tex,
     }
 
     // alias for convenience:
@@ -428,6 +438,7 @@ show_quiz_screen :: proc(text: any){
     k2.clear(QUIZ_COLOR)
     k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_RED)
 
+    
     // popup simple dentro de la misma ventana
     k2.draw_rect(
         {
@@ -438,7 +449,9 @@ show_quiz_screen :: proc(text: any){
         },
         k2.DARK_RED
     )
-    k2.draw_text("QUIZ Time...", {f32(settings.SCREEN_WIDTH) * 0.11, f32(settings.SCREEN_HEIGHT) * 0.11}, 40, k2.WHITE)
+
+    k2.draw_texture(quiz_time_text.tex, {20,20})
+    
     k2.draw_text("Hit ESC to close", {f32(settings.SCREEN_WIDTH) - 300 , f32(settings.SCREEN_HEIGHT) - 50}, 25, k2.YELLOW)
 
     k2.draw_text("test", {200, 150}, 30 , k2.WHITE)
@@ -456,7 +469,10 @@ show_intro_screen :: proc(){
     // FONDO / Brackground
     k2.draw_texture(background_intro.tex, {0,0})
 
-    k2.draw_text("Hit ENTER to play!!", {260, 10}, 50, k2.YELLOW)
+    message_enter_play := "Hit ENTER to play!!"
+    message_enter_play_w := k2.measure_text(message_enter_play, 50)[0]
+    message_enter_play_pos :k2.Vec2 = {f32(settings.SCREEN_WIDTH / 2) - message_enter_play_w / 2, f32(settings.SCREEN_HEIGHT - 100)}
+    k2.draw_text(message_enter_play, message_enter_play_pos, 50, k2.YELLOW)
     
     title_image_pos : k2.Vec2 = { 
         f32(settings.SCREEN_WIDTH / 2 - intro_title_game.tex.width/2), 
