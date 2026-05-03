@@ -29,6 +29,8 @@ button_text := ""
 
 enemy_sprites_textures : [9]k2.Texture
 
+UI_DEBUG := false
+
 Interactable_Type :: enum {
 	Enemy,
     Quiz_Box,
@@ -61,7 +63,18 @@ Player :: struct {
     tex: k2.Texture,
 	pos: Vec2,
     lives: int,
+    dir: Direction,
 }
+
+
+Screen_State :: enum {
+    Game,
+    Quiz_Popup,
+}
+
+screen_state := Screen_State.Game
+
+PLAYER_VELOCITY: f32 = 200
 
 game_finished: bool
 
@@ -72,6 +85,8 @@ player: Player
 quiz_boxes : Quiz_Boxes
 
 intro: bool
+
+world_dim : k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
 
 main :: proc() {
 	track: mem.Tracking_Allocator
@@ -120,7 +135,7 @@ init :: proc(){
 
     // alias for convenience:
     grpiw :: get_random_pos_in_world
-    world_dim : k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
+
 
     position_set_avail :[3]Position_Set = {position_set_1, position_set_2, position_set_3}
 
@@ -177,39 +192,96 @@ update :: proc() {
     if game_finished {
 		return
 	}
-    
-    k2.clear(CLEAR_COLOR)
-    k2.draw_text(title_text_value, title_pos, title_fs, k2.LIGHT_YELLOW)
-    
-    if button_text != "" {
-        k2.draw_text(button_text, k2.Vec2{50, 450}, 30, k2.RED)
-    }
 
-    movement: k2.Vec2
-    
-    if k2.key_is_held(.Left) {
-        movement.x -= 1
-    }
+    if screen_state == .Game {
+        k2.clear(CLEAR_COLOR)
+        k2.draw_text(title_text_value, title_pos, title_fs, k2.LIGHT_YELLOW)
+        
+        if button_text != "" {
+            k2.draw_text(button_text, k2.Vec2{50, 450}, 30, k2.RED)
+        }
 
-    if k2.key_is_held(.Right) {
-        movement.x += 1
-    }
+        movement: Vec2
 
-    if k2.key_is_held(.Up) {
-        movement.y -= 1
-    }
+        if k2.key_went_down(.F2) do UI_DEBUG = !UI_DEBUG
 
-    if k2.key_is_held(.Down) {
-        movement.y += 1
-    }
+        if UI_DEBUG {
+            ui_debug_options()
+        }
 
-    // Normalizing makes the movement not go faster when going diagonally.
-    player.pos += linalg.normalize0(movement) * k2.get_frame_time() * 400
+        if k2.key_is_held(.Up) {
+            movement.y -= 1
+        }
+        if k2.key_is_held(.Down) {
+            movement.y += 1
+        }
+        if k2.key_is_held(.Left) {
+            movement.x -= 1
+        }
+        if k2.key_is_held(.Right) {
+            movement.x += 1
+        }
 
-    k2.draw_texture(player.tex, player.pos, origin = k2.rect_bottom_middle(k2.get_texture_rect(player.tex)))
+        movement = linalg.normalize0(movement)
 
-    for box in quiz_boxes.boxes_array {
-        k2.draw_texture(box.tex, box.pos, origin = k2.rect_bottom_middle(k2.get_texture_rect(box.tex)))
+        if movement.x > 0 {
+            player.dir = .East
+        } else if movement.x < 0 {
+            player.dir = .West
+        } else if movement.y > 0 {
+            player.dir = .South
+        } else if movement.y < 0 {
+            player.dir = .North
+        }
+
+        dt := k2.get_frame_time()
+        to_move := movement * dt * PLAYER_VELOCITY
+
+        colliders := make([dynamic]k2.Rect, context.temp_allocator)
+
+        for box in quiz_boxes.boxes_array {
+            k2.draw_texture(box.tex, box.pos, origin = k2.rect_center(k2.get_texture_rect(box.tex)))
+            box_rect := k2.rect_from_pos_size({box.pos[0] - f32(box.tex.width)/4, box.pos[1]- 5 - f32(box.tex.height)/4}, {f32(box.tex.width)/2,f32(box.tex.height)/2})
+            if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
+            append(&colliders, box_rect)
+        }
+
+        k2.draw_texture(player.tex, player.pos, origin = k2.rect_bottom_middle(k2.get_texture_rect(player.tex)))
+
+        for c in colliders {
+            pc := calc_player_collider(player.pos)
+
+            if UI_DEBUG {
+                k2.draw_rect(pc, k2.YELLOW)
+                k2.draw_rect_outline({player.pos.x, player.pos.y, f32(player.tex.width), f32(player.tex.height)}, 3,k2.RED)
+            }
+
+            overlap, overlapping := k2.rect_overlap(pc, c)
+
+            if overlapping && overlap.w != 0 {
+                sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -1 : 1
+                fix := overlap.w * sign 
+                player.pos.x += fix
+                screen_state = .Quiz_Popup
+            }
+        }
+
+        player.pos.x += to_move.x
+
+        for c in colliders {
+            pc := calc_player_collider(player.pos)
+            overlap, overlapping := k2.rect_overlap(pc, c)
+
+            if overlapping && overlap.h != 0 {
+                sign: f32 = pc.y + pc.h / 2 < (c.y + c.h / 2) ? -1 : 1
+                fix := overlap.h * sign
+                player.pos.y += fix
+            }
+        }
+
+        player.pos.y += to_move.y
+    } else if screen_state == .Quiz_Popup {
+        show_quiz_screen()
     }
 
     k2.present()
@@ -227,6 +299,35 @@ shutdown :: proc() {
 	}
 
 	k2.shutdown()
+}
+
+
+ui_debug_options :: proc(){
+
+    k2.draw_rect({10, 100, 300, 600}, k2.BROWN)
+    text_size: f32 = 40 
+    text_mesg := " - THIS IS DEBUG UI MODE - "
+    text_width := k2.measure_text(text_mesg, text_size)
+    k2.draw_text(text_mesg, {f32(screen_w / 2) - f32(text_width.x / 2), 20}, text_size, k2.YELLOW)
+    for text_size < 60 {
+        text_size += 2
+    }
+    player_pos_text := fmt.tprintfln("player position %v", player.pos)
+
+    k2.draw_text(player_pos_text, {20, 110}, 20, k2.YELLOW)
+}
+
+
+show_quiz_screen :: proc(){
+    k2.clear(INTRO_COLOR)
+    // popup simple dentro de la misma ventana
+    k2.draw_rect({200, 150, 800, 500}, k2.BROWN)
+    k2.draw_text("Open Quiz", {260, 220}, 40, k2.WHITE)
+    k2.draw_text("Hit ESC to close", {260, 280}, 24, k2.YELLOW)
+
+    if k2.key_went_down(.Escape) {
+        screen_state = .Game
+    }
 }
 
 
