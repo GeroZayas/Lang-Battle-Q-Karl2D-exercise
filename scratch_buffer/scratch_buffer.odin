@@ -35,6 +35,10 @@ text_pos: k2.Vec2 = {20, 20}
 
 quiz_doc : QuizDoc
 
+current_question : string
+
+message : string
+
 get_json :: proc(path: string) -> ([]u8, bool){
 	data, d_err := os.read_entire_file_from_path(name = path, allocator = context.allocator)
 	if d_err != nil {
@@ -58,8 +62,7 @@ init :: proc(){
     }
     fmt.println(quiz_doc)
 
-    fmt.println("quiz_doc.all_questions:")
-    fmt.println(quiz_doc.all_questions)
+    current_question = quiz_doc.all_questions["1"].question
 
 }
 
@@ -73,7 +76,15 @@ step :: proc() -> bool{
     k2.clear(colors["BLUE"])
 
     k2.draw_text("Jeloup", text_pos, 200, colors["GOLD"])
-    k2.draw_text("This is the Scratch Buffer", {text_pos.x, text_pos.y + 200}, 70, colors["GOLD"])
+    if message == "" {
+    	message = "This is the Scratch Buffer"
+    }
+
+    k2.draw_text( message, {text_pos.x, text_pos.y + 200}, 70, colors["GOLD"])
+
+    if k2.key_went_down(.Enter) {
+    	message = current_question
+    }
 
     k2.present()
     return true
