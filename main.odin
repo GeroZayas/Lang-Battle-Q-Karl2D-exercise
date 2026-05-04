@@ -84,7 +84,7 @@ Player :: struct {
 
 
 Score :: struct {
-    
+
 }
 
 Screen_State :: enum {
@@ -204,7 +204,7 @@ init :: proc(){
     game_over_text_tex := k2.load_texture_from_bytes(#load("./resources/textures/you-died-medium-cropped.png"))
 
      // ------------------------------------------------------------------------
-    // Random position in the world, for when needed    
+    // Random position in the world, for when needed
     random_pos := get_random_pos_in_world(world_dim)
 
     // ------------------------------------------------------------------------
@@ -225,15 +225,15 @@ init :: proc(){
 		"Odin" = k2.load_texture_from_bytes(#load("./resources/sprites/odin-small-v1.png")),
 	}
     // ------------------------------------------------------------------------
-    
-    odin = {    
+
+    odin = {
         tex = enemy_sprites_textures["Odin"],
         name = "Odin",
         unique_power = "Hellope Power",
         pos = get_random_pos_in_world(world_dim),
         dir = .East
     }
-    
+
     // ------------------------------------------------------------------------
     // AUDIOS and SOUNDS
 	audio_player_hit = k2.load_sound_from_bytes(#load("./resources/audios/floraphonic-arcade-ui-6-229503.wav"))
@@ -265,7 +265,7 @@ init :: proc(){
     you_died_text =  {
         tex     = game_over_text_tex,
     }
-    
+
 
     // alias for convenience:
     grpiw :: get_random_pos_in_world
@@ -273,12 +273,12 @@ init :: proc(){
 
     position_set_avail :[3]Position_Set = {position_set_1, position_set_2, position_set_3}
 
-    // We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them 
+    // We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
     // and draw in those positions
     rand_position_set := rand.choice(position_set_avail[:])
 
     append(
-        &quiz_boxes.boxes_array, 
+        &quiz_boxes.boxes_array,
         Quiz_Box{index=0, questions="Q1", tex=quiz_box_tex, pos=rand_position_set.positions[0]},
         Quiz_Box{index=2, questions="Q2", tex=quiz_box_tex, pos=rand_position_set.positions[1]},
         Quiz_Box{index=3, questions="Q3", tex=quiz_box_tex, pos=rand_position_set.positions[2]},
@@ -287,20 +287,20 @@ init :: proc(){
 
     fmt.println(quiz_boxes)
 
-   
+
 
 }
 
 
 step :: proc() -> bool{
-    
+
     if !k2.update() {
 		return false
 	}
 
     update()
     draw()
-    
+
     return true
 }
 
@@ -364,8 +364,8 @@ update :: proc() {
         for box in quiz_boxes.boxes_array {
             k2.draw_texture(box.tex, box.pos, origin = k2.rect_center(k2.get_texture_rect(box.tex)))
             box_rect := k2.rect_from_pos_size(
-                {box.pos[0] - f32(box.tex.width)/4, 
-                box.pos[1]- 5 - f32(box.tex.height)/4}, 
+                {box.pos[0] - f32(box.tex.width)/4,
+                box.pos[1]- 5 - f32(box.tex.height)/4},
                 {f32(box.tex.width)/2,f32(box.tex.height)/2}
             )
             if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
@@ -396,13 +396,13 @@ update :: proc() {
             }
 
             overlap, overlapping := k2.rect_overlap(pc, c)
-        
+
             // ------------------------------------------------------------------------
             // --> COLLISION with QUIZ BOX <--
             // ------------------------------------------------------------------------
             if overlapping && overlap.w != 0 {
                 sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -2 : 2
-                fix := overlap.w * sign 
+                fix := overlap.w * sign
                 player.pos.x += fix
                 k2.play_sound(audio_player_hit)
                 screen_state = .Quiz_Popup
@@ -433,7 +433,7 @@ update :: proc() {
 
         // ------------------------------------------------------------------------
 
-        
+
         if odin.dir == .East && odin.pos.x > f32(settings.SCREEN_WIDTH) {
             odin.pos.x = 0
             odin.pos.y = f32(rand.int_range(20, settings.SCREEN_HEIGHT))
@@ -443,13 +443,13 @@ update :: proc() {
         odin.pos.x += f32(ENEMY_SPEED)
 
         pc := calc_player_collider(player.pos)
-        
+
         // ------------------------------------------------------------------------
         // CHECK COLLISION WITH ENEMY
         // ------------------------------------------------------------------------
         odin_c := calc_player_collider(odin.pos)
         overlap, overlapping := k2.rect_overlap(pc, odin_c)
-        
+
         if overlapping && overlap.h != 0 {
             screen_state = .Game_Over
         }
@@ -463,7 +463,7 @@ update :: proc() {
 
     } else if screen_state == .Intro {
         show_intro_screen()
-    
+
     } else if screen_state == .Game_Over {
             game_over_screen()
     }
@@ -480,9 +480,9 @@ draw :: proc() {
 shutdown :: proc() {
 
 	// for tex in enemy_sprites_textures {
-	// 	k2.destroy_texture(tex)	
+	// 	k2.destroy_texture(tex)
 	// }
-    
+
     k2.destroy_sound(audio_player_hit)
 
 	k2.shutdown()
@@ -491,7 +491,7 @@ shutdown :: proc() {
 ui_debug_options :: proc(){
 
     k2.draw_rect({10, 100, 300, 600}, k2.BROWN)
-    text_size: f32 = 40 
+    text_size: f32 = 40
     text_mesg := " - THIS IS DEBUG UI MODE - "
     text_width := k2.measure_text(text_mesg, text_size)
     k2.draw_text(text_mesg, {f32(world_dim[0] / 2) - f32(text_width.x / 2), 20}, text_size, k2.YELLOW)
@@ -508,20 +508,20 @@ show_quiz_screen :: proc(text: string){
     k2.clear(QUIZ_COLOR)
     k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_RED)
 
-    
+
     // popup simple dentro de la misma ventana
     k2.draw_rect(
         {
-            f32(settings.SCREEN_WIDTH) * 0.10, 
-            f32(settings.SCREEN_HEIGHT) * 0.10,  
-            f32(settings.SCREEN_WIDTH) * 0.80,  
+            f32(settings.SCREEN_WIDTH) * 0.10,
+            f32(settings.SCREEN_HEIGHT) * 0.10,
+            f32(settings.SCREEN_WIDTH) * 0.80,
             f32(settings.SCREEN_HEIGHT) * 0.80
         },
         k2.DARK_RED
     )
 
     k2.draw_texture(quiz_time_text.tex, {20,20})
-    
+
     k2.draw_text("Hit ESC to close", {f32(settings.SCREEN_WIDTH) - 300 , f32(settings.SCREEN_HEIGHT) - 50}, 25, k2.YELLOW)
 
     k2.draw_text(text, {200, 150}, 30 , k2.WHITE)
@@ -535,7 +535,7 @@ show_quiz_screen :: proc(text: string){
 
 show_intro_screen :: proc(){
     k2.clear(INTRO_COLOR)
-    
+
     // FONDO / Brackground
     k2.draw_texture(background_intro.tex, {0,0})
 
@@ -543,10 +543,10 @@ show_intro_screen :: proc(){
     message_enter_play_w := k2.measure_text(message_enter_play, 50)[0]
     message_enter_play_pos :k2.Vec2 = {f32(settings.SCREEN_WIDTH / 2) - message_enter_play_w / 2, f32(settings.SCREEN_HEIGHT - 100)}
     k2.draw_text(message_enter_play, message_enter_play_pos, 50, k2.YELLOW)
-    
-    title_image_pos : k2.Vec2 = { 
-        f32(settings.SCREEN_WIDTH / 2 - intro_title_game.tex.width/2), 
-        f32(settings.SCREEN_HEIGHT / 2  - intro_title_game.tex.height/2) 
+
+    title_image_pos : k2.Vec2 = {
+        f32(settings.SCREEN_WIDTH / 2 - intro_title_game.tex.width/2),
+        f32(settings.SCREEN_HEIGHT / 2  - intro_title_game.tex.height/2)
     }
     k2.draw_texture(intro_title_game.tex, title_image_pos)
 
@@ -573,13 +573,13 @@ game_over_screen :: proc(){
 
 
     k2.draw_texture(
-        you_died_text.tex, 
+        you_died_text.tex,
         {
             f32(settings.SCREEN_WIDTH/2 - you_died_text.tex.width /2),
             f32(settings.SCREEN_HEIGHT/2 - you_died_text.tex.height /2)
         }
     )
-    
+
     if k2.key_went_down(.Enter) {
         player.pos   = get_random_pos_in_world(world_dim)
         screen_state = .Intro

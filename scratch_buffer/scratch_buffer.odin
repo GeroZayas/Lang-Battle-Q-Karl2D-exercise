@@ -5,6 +5,7 @@ package scratch_buffer
 import k2 "../../karl2d"
 import "core:os"
 import "core:fmt"
+import "core:encoding/json"
 
 SCREEN_WIDTH :: 1000
 SCREEN_HEIGHT :: 900
@@ -52,4 +53,3 @@ main :: proc() {
 	for step() {}
 	shutdown()
 }
-
