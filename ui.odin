@@ -1,11 +1,18 @@
+#+feature dynamic-literals
+
 package Lang_Battle_Q_game
 
 import k2 "../karl2d"
 
 
+Position_Set :: struct {
+	positions : [4]k2.Vec2
+}
+
+
 // VARS for the UI
 Settings :: struct {
-    SCREEN_WIDTH : int,
+	SCREEN_WIDTH : int,
     SCREEN_HEIGHT : int
 }
 
@@ -13,7 +20,7 @@ Settings :: struct {
 
 button :: proc(r: Rect, text: string) -> bool {
 	in_rect := point_in_rect(k2.get_mouse_position(), r)
-
+	
 	bg_color := k2.LIGHT_GRAY
 	text_color := k2.BLACK
 
@@ -56,3 +63,14 @@ inset_rect :: proc(r: Rect, x: f32, y: f32) -> Rect {
 		r.h - y * 2,
 	}
 }
+
+
+calc_player_collider :: proc(player_pos: Vec2) -> k2.Rect {
+	return {
+		player_pos.x - 30,
+		player_pos.y - 90,
+		50,
+		50,
+	}
+}
+

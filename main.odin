@@ -1,32 +1,71 @@
+#+feature dynamic-literals
+
 package Lang_Battle_Q_game
 
+import "vendor:commonmark"
 import "core:fmt"
 import "core:math/linalg"
+import "core:math/rand"
 import "core:os"
 import k2 "../karl2d"
 import "core:encoding/json"
+import "core:log"
+import "core:mem"
 
 
 Rect :: k2.Rect
 Vec2 :: k2.Vec2
 Tex :: k2.Texture
 
-settings := Settings{1200, 900}
+CLEAR_COLOR: k2.Color = {43, 42, 44, 250}
+INTRO_COLOR: k2.Color = {1, 32, 46, 250}
+QUIZ_COLOR: k2.Color = {46, 20, 1, 250}
+settings := Settings{1024, 900}
 
-title_text_value := "Welcome to Lang Battle Q!"
-title_pos: k2.Vec2 = {50, 20}
-title_fs: f32 = 100
+title_text_value := "Go to the CPQs and Answer the Questions before getting caught!"
+title_pos: k2.Vec2 = {50, 10}
+title_fs: f32 = 20
 
 text_pos: k2.Vec2 = {50, 150}
 text_fs: f32 = 50
 
 button_text := ""
 
-sprites_textures : [10]k2.Texture
+enemy_sprites_textures : map[string]k2.Texture
+
+UI_DEBUG := false
 
 Interactable_Type :: enum {
 	Enemy,
     Quiz_Box,
+}
+
+Enemy :: struct {
+    tex: k2.Texture,
+    name: string,
+    unique_power: any,
+    pos: k2.Vec2,
+    dir: Direction,
+}
+
+Quiz_Box :: struct {
+    index : int,
+    questions: string,
+    tex: k2.Texture,
+    pos: k2.Vec2,
+}
+
+Game_Title_Texture :: struct {
+    tex: k2.Texture,
+    pos: k2.Vec2,
+}
+
+Background_Texture :: struct {
+    tex: k2.Texture,
+}
+
+Quiz_Boxes :: struct {
+    boxes_array: [dynamic]Quiz_Box
 }
 
 Direction :: enum {
@@ -37,210 +76,512 @@ Direction :: enum {
 }
 
 Player :: struct {
+    tex: k2.Texture,
 	pos: Vec2,
-	dir: Direction,
+    lives: int,
+    dir: Direction,
 }
+
+
+Score :: struct {
+    
+}
+
+Screen_State :: enum {
+    Game,
+    Quiz_Popup,
+    Intro,
+    Game_Over,
+}
+
+answered_questions:[dynamic]string
+
+screen_state := Screen_State.Intro
+
+PLAYER_VELOCITY: f32 = 300
+ENEMY_SPEED: u8 = 5
+
+game_finished: bool
+
+current_level_idx: int
 
 player: Player
 
+odin : Enemy
 
-main :: proc(){
+quiz_boxes : Quiz_Boxes
 
-    k2.init(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, "Lang Battle Q!")
-    
-    sprite_python := get_sprite("python-1.png")
-    sprite_C := get_sprite("C-1.png")
-    sprite_Cpp := get_sprite("Cpp-1.png")
-    sprite_JS := get_sprite("JS-1.png")
-    sprite_TS := get_sprite("TS-1.png")
-    sprite_Java := get_sprite("Java-1.png")
-    sprite_Assembly := get_sprite("Assembly-1.png")
-    sprite_Go := get_sprite("Go-1.png")
-    sprite_Rust := get_sprite("Rust-1.png")
-    sprite_Odin := get_sprite("Odin-1.png")
+intro: bool
+
+world_dim : k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
+
+// ------------------------------------------------------------------------
+// TEXTURES FOR INTRO SCREEN
+intro_title_game : Game_Title_Texture
+background_intro : Background_Texture
+quiz_time_text : Background_Texture
+you_died_text : Background_Texture
+
+// ------------------------------------------------------------------------
+// AUDIOS
+audio_player_hit: k2.Sound
+audio_intro_music: k2.Audio_Buffer
+audio_quiz_correct: k2.Audio_Buffer
+audio_quiz_wrong: k2.Audio_Buffer
 
 
-    quiz_python_level_1 := load_json("./resources/quiz/level_1_python.json")
-    quiz_python_level_2 := load_json("./resources/quiz/level_2_python.json")
-    quiz_python_level_3 := load_json("./resources/quiz/level_3_python.json")
 
-    // ------------ PYTHON SPRITE
-    sprite_python_src := k2.get_texture_rect(sprite_python)
-    sprite_python_w := sprite_python_src.w*0.20
-    sprite_python_h := sprite_python_src.h*0.23
-    
-    // ------------ C SPRITE
-    sprite_C_src := k2.get_texture_rect(sprite_C)
-    sprite_C_w := sprite_C_src.w*0.20
-    sprite_C_h := sprite_C_src.h*0.20
-    
-    // ------------ Cpp SPRITE
-    sprite_Cpp_src := k2.get_texture_rect(sprite_Cpp)
-    sprite_Cpp_w := sprite_Cpp_src.w*0.20
-    sprite_Cpp_h := sprite_Cpp_src.h*0.20
-    
-    // ------------ JS SPRITE
-    sprite_JS_src := k2.get_texture_rect(sprite_JS)
-    sprite_JS_w := sprite_JS_src.w*0.20
-    sprite_JS_h := sprite_JS_src.h*0.20
+// ------------------------------------------------------------------------
+// PROCEDURES
+// ------------------------------------------------------------------------
 
-    // ------------ TS SPRITE
-    sprite_TS_src := k2.get_texture_rect(sprite_TS)
-    sprite_TS_w := sprite_TS_src.w*0.20
-    sprite_TS_h := sprite_TS_src.h*0.20
-    
-    // ------------ Java SPRITE
-    sprite_Java_src := k2.get_texture_rect(sprite_Java)
-    sprite_Java_w := sprite_Java_src.w*0.18
-    sprite_Java_h := sprite_Java_src.h*0.18
-    
-    // ------------ Assembly SPRITE
-    sprite_Assembly_src := k2.get_texture_rect(sprite_Assembly)
-    sprite_Assembly_w := sprite_Assembly_src.w*0.20
-    sprite_Assembly_h := sprite_Assembly_src.h*0.20
-    
-    // ------------ Rust SPRITE
-    sprite_Rust_src := k2.get_texture_rect(sprite_Rust)
-    sprite_Rust_w := sprite_Rust_src.w*0.20
-    sprite_Rust_h := sprite_Rust_src.h*0.20
-    
-    // ------------ Go SPRITE
-    sprite_Go_src := k2.get_texture_rect(sprite_Go)
-    sprite_Go_w := sprite_Go_src.w*0.20
-    sprite_Go_h := sprite_Go_src.h*0.20
-    
-    // ------------ Odin SPRITE
-    sprite_Odin_src := k2.get_texture_rect(sprite_Odin)
-    sprite_Odin_w := sprite_Odin_src.w*0.20
-    sprite_Odin_h := sprite_Odin_src.h*0.20
-    
+main :: proc() {
+	track: mem.Tracking_Allocator
+	mem.tracking_allocator_init(&track, context.allocator)
+	context.allocator = mem.tracking_allocator(&track)
 
-    for k2.update(){
-        k2.clear(k2.LIGHT_YELLOW)
-        k2.draw_text(title_text_value, title_pos, title_fs, k2.DARK_BLUE)
-        
-        if button({50, 600, 90, 50}, "Click"){ 
-            if button_text == "" {
-                button_text = "Button clicked!"
-            } else {
-                button_text = ""
-            }
+    context.logger = log.create_console_logger()
+    // ------------------------------------------------------------------------
+    // THE MAIN LOOP
+	init()
+	for step() {}
+	shutdown()
+    // ------------------------------------------------------------------------
+
+	if len(track.allocation_map) > 0 {
+		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+		for _, entry in track.allocation_map {
+			fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+		}
+	}
+	mem.tracking_allocator_destroy(&track)
+}
+
+init :: proc(){
+    k2.init(settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT, "Lang Battle Q!", options = {window_mode = .Windowed_Resizable})
+    current_level_idx = 0
+
+    intro = true
+
+    screen_w := f32(settings.SCREEN_WIDTH)
+    screen_h := f32(settings.SCREEN_HEIGHT)
+
+    position_set_1 := Position_Set{
+        positions = {
+            {screen_w * 0.10, screen_h * 0.20},
+            {screen_w * 0.20, screen_h * 0.55},
+            {screen_w * 0.68, screen_h * 0.30},
+            {screen_w * 0.90, screen_h * 0.85},
         }
-        
+    }
+
+    position_set_2 := Position_Set{
+        positions = {
+            {screen_w * 0.23, screen_h * 0.23},
+            {screen_w * 0.71, screen_h * 0.57},
+            {screen_w * 0.47, screen_h * 0.88},
+            {screen_w * 0.91, screen_h * 0.13},
+        }
+    }
+
+    position_set_3 := Position_Set{
+        positions = {
+            {screen_w * 0.12, screen_h * 0.88},
+            {screen_w * 0.38, screen_h * 0.72},
+            {screen_w * 0.66, screen_h * 0.28},
+            {screen_w * 0.84, screen_h * 0.54},
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // LOADING THE JSON WITH THE QUESTIONS AND ANSWERS
+
+    player_tex := k2.load_texture_from_bytes(#load("./resources/sprites/python-small-v2.png"))
+    quiz_box_tex := k2.load_texture_from_bytes(#load("./resources/textures/quiz-box-cpq-v1-small.png"))
+    intro_title_game_tex := k2.load_texture_from_bytes(#load("./resources/textures/title-game-big.png"))
+    background_intro_tex := k2.load_texture_from_bytes(#load("./resources/textures/intro-fondo-v1-smaller.png"))
+    quiz_time_text_tex := k2.load_texture_from_bytes(#load("./resources/textures/quiz-time-text-small.png"))
+    game_over_text_tex := k2.load_texture_from_bytes(#load("./resources/textures/you-died-medium-cropped.png"))
+
+     // ------------------------------------------------------------------------
+    // Random position in the world, for when needed    
+    random_pos := get_random_pos_in_world(world_dim)
+
+    // ------------------------------------------------------------------------
+    // Textures for Enemies
+    // enemy_sprites_textures = {
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/C-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Cpp-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/JS-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/TS-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Java-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Assembly-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Go-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Rust-1.png")),
+	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Odin-1.png")),
+	// }
+
+    enemy_sprites_textures = {
+		"Odin" = k2.load_texture_from_bytes(#load("./resources/sprites/odin-small-v1.png")),
+	}
+    // ------------------------------------------------------------------------
+    
+    odin = {    
+        tex = enemy_sprites_textures["Odin"],
+        name = "Odin",
+        unique_power = "Hellope Power",
+        pos = get_random_pos_in_world(world_dim),
+        dir = .East
+    }
+    
+    // ------------------------------------------------------------------------
+    // AUDIOS and SOUNDS
+	audio_player_hit = k2.load_sound_from_bytes(#load("./resources/audios/floraphonic-arcade-ui-6-229503.wav"))
+    log.debug(audio_player_hit)
+	// audio_intro_music = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
+	// audio_quiz_correct = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
+	// audio_quiz_wrong = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
+    // ------------------------------------------------------------------------
+    // Our MAIN PLAYER
+    player = {
+        tex     = player_tex,
+        pos     = {500,450},
+        lives   = 3
+	}
+
+    intro_title_game =  {
+        tex     = intro_title_game_tex,
+        pos     = {0, 0}
+    }
+
+    background_intro =  {
+        tex     = background_intro_tex,
+    }
+
+    quiz_time_text =  {
+        tex     = quiz_time_text_tex,
+    }
+
+    you_died_text =  {
+        tex     = game_over_text_tex,
+    }
+    
+
+    // alias for convenience:
+    grpiw :: get_random_pos_in_world
+
+
+    position_set_avail :[3]Position_Set = {position_set_1, position_set_2, position_set_3}
+
+    // We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them 
+    // and draw in those positions
+    rand_position_set := rand.choice(position_set_avail[:])
+
+    append(
+        &quiz_boxes.boxes_array, 
+        Quiz_Box{index=0, questions="Q1", tex=quiz_box_tex, pos=rand_position_set.positions[0]},
+        Quiz_Box{index=2, questions="Q2", tex=quiz_box_tex, pos=rand_position_set.positions[1]},
+        Quiz_Box{index=3, questions="Q3", tex=quiz_box_tex, pos=rand_position_set.positions[2]},
+        Quiz_Box{index=4, questions="Q4", tex=quiz_box_tex, pos=rand_position_set.positions[3]},
+    )
+
+    fmt.println(quiz_boxes)
+
+   
+
+}
+
+
+step :: proc() -> bool{
+    
+    if !k2.update() {
+		return false
+	}
+
+    update()
+    draw()
+    
+    return true
+}
+
+update :: proc() {
+
+    if game_finished {
+		return
+	}
+
+    if screen_state == .Game {
+        k2.clear(CLEAR_COLOR)
+
+        k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_BLUE)
+
+
+        k2.draw_text(title_text_value, title_pos, title_fs, k2.LIGHT_YELLOW)
+
         if button_text != "" {
             k2.draw_text(button_text, k2.Vec2{50, 450}, 30, k2.RED)
         }
 
-        movement: k2.Vec2
-        
-        if k2.key_is_held(.Left) {
-            movement.x -= 1
-        }
+        player_movement: Vec2
+        odin_movement: Vec2
 
-        if k2.key_is_held(.Right) {
-            movement.x += 1
+        if k2.key_went_down(.F2) do UI_DEBUG = !UI_DEBUG
+
+        if UI_DEBUG {
+            ui_debug_options()
         }
 
         if k2.key_is_held(.Up) {
-            movement.y -= 1
+            player_movement.y -= 1
         }
-
         if k2.key_is_held(.Down) {
-            movement.y += 1
+            player_movement.y += 1
+        }
+        if k2.key_is_held(.Left) {
+            player_movement.x -= 1
+        }
+        if k2.key_is_held(.Right) {
+            player_movement.x += 1
         }
 
-        // Normalizing makes the movement not go faster when going diagonally.
-        sprite_python_pos += linalg.normalize0(movement) * k2.get_frame_time() * 400
+        player_movement = linalg.normalize0(player_movement)
 
-        sprite_python_tex_dest := k2.Rect {
-            sprite_python_pos.x, sprite_python_pos.y,
-            sprite_python_w, sprite_python_h,
+        if player_movement.x > 0 {
+            player.dir = .East
+        } else if player_movement.x < 0 {
+            player.dir = .West
+        } else if player_movement.y > 0 {
+            player.dir = .South
+        } else if player_movement.y < 0 {
+            player.dir = .North
         }
+
+        dt := k2.get_frame_time()
+        to_move := player_movement * dt * PLAYER_VELOCITY
+
+        colliders := make([dynamic]k2.Rect, context.temp_allocator)
+
+        for box in quiz_boxes.boxes_array {
+            k2.draw_texture(box.tex, box.pos, origin = k2.rect_center(k2.get_texture_rect(box.tex)))
+            box_rect := k2.rect_from_pos_size(
+                {box.pos[0] - f32(box.tex.width)/4, 
+                box.pos[1]- 5 - f32(box.tex.height)/4}, 
+                {f32(box.tex.width)/2,f32(box.tex.height)/2}
+            )
+            if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
+            append(&colliders, box_rect)
+        }
+
+        // -------------------------------- PLAYER -------------------------------------------------------------
+        k2.draw_texture(player.tex, player.pos, origin = k2.rect_bottom_middle(k2.get_texture_rect(player.tex)))
+        // -----------------------------------------------------------------------------------------------------
+
+
+        // --------------------------------- ENEMIES --------------------------------------------------------
+        // ODIN ENEMY
+        k2.draw_texture(odin.tex, odin.pos, origin = k2.rect_bottom_middle(k2.get_texture_rect(player.tex)))
+        // OTHER
+        {
+
+        }
+        // ---------------------------------------------------------------------------------------------------
+
+
+        for c in colliders {
+            pc := calc_player_collider(player.pos)
+
+            if UI_DEBUG {
+                k2.draw_rect(pc, k2.YELLOW)
+                k2.draw_rect_outline({player.pos.x, player.pos.y, f32(player.tex.width), f32(player.tex.height)}, 3,k2.RED)
+            }
+
+            overlap, overlapping := k2.rect_overlap(pc, c)
         
-        sprite_C_tex_dest := k2.Rect {
-            sprite_C_pos.x, sprite_C_pos.y,
-            sprite_C_w, sprite_C_h,
+            // ------------------------------------------------------------------------
+            // --> COLLISION with QUIZ BOX <--
+            // ------------------------------------------------------------------------
+            if overlapping && overlap.w != 0 {
+                sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -2 : 2
+                fix := overlap.w * sign 
+                player.pos.x += fix
+                k2.play_sound(audio_player_hit)
+                screen_state = .Quiz_Popup
+            }
+            // ------------------------------------------------------------------------
+
         }
 
-        sprite_Cpp_tex_dest := k2.Rect {
-            sprite_Cpp_pos.x, sprite_Cpp_pos.y,
-            sprite_Cpp_w, sprite_Cpp_h,
+        player.pos.x += to_move.x
+
+        for c in colliders {
+            pc := calc_player_collider(player.pos)
+            overlap, overlapping := k2.rect_overlap(pc, c)
+
+            // ------------------------------------------------------------------------
+            // --> COLLISION with QUIZ BOX <--
+            // ------------------------------------------------------------------------
+            if overlapping && overlap.h != 0 {
+                sign: f32 = pc.y + pc.h / 2 < (c.y + c.h / 2) ? -2 : 2
+                fix := overlap.h * sign
+                player.pos.y += fix
+                k2.play_sound(audio_player_hit)
+                screen_state = .Quiz_Popup
+            }
         }
 
-        sprite_JS_tex_dest := k2.Rect {
-            sprite_JS_pos.x, sprite_JS_pos.y,
-            sprite_JS_w, sprite_JS_h,
-        }
+        player.pos.y += to_move.y
 
-        sprite_TS_tex_dest := k2.Rect {
-            sprite_TS_pos.x, sprite_TS_pos.y,
-            sprite_TS_w, sprite_TS_h,
-        }
+        // ------------------------------------------------------------------------
 
-        sprite_Java_tex_dest := k2.Rect {
-            sprite_Java_pos.x, sprite_Java_pos.y,
-            sprite_Java_w, sprite_Java_h,
-        }
         
-        sprite_Assembly_tex_dest := k2.Rect {
-            sprite_Assembly_pos.x, sprite_Assembly_pos.y,
-            sprite_Assembly_w, sprite_Assembly_h,
+        if odin.dir == .East && odin.pos.x > f32(settings.SCREEN_WIDTH) {
+            odin.pos.x = 0
+            odin.pos.y = f32(rand.int_range(20, settings.SCREEN_HEIGHT))
         }
 
-        sprite_Rust_tex_dest := k2.Rect {
-            sprite_Rust_pos.x, sprite_Rust_pos.y,
-            sprite_Rust_w, sprite_Rust_h,
+        // ENEMY MOVEMENT
+        odin.pos.x += f32(ENEMY_SPEED)
+
+        pc := calc_player_collider(player.pos)
+        
+        // ------------------------------------------------------------------------
+        // CHECK COLLISION WITH ENEMY
+        // ------------------------------------------------------------------------
+        odin_c := calc_player_collider(odin.pos)
+        overlap, overlapping := k2.rect_overlap(pc, odin_c)
+        
+        if overlapping && overlap.h != 0 {
+            screen_state = .Game_Over
         }
-
-        sprite_Go_tex_dest := k2.Rect {
-            sprite_Go_pos.x, sprite_Go_pos.y,
-            sprite_Go_w, sprite_Go_h,
-        }
-
-        sprite_Odin_tex_dest := k2.Rect {
-            sprite_Odin_pos.x, sprite_Odin_pos.y,
-            sprite_Odin_w, sprite_Odin_h,
-        }
+        // ------------------------------------------------------------------------
 
 
 
-        k2.draw_texture_fit(sprite_python, sprite_python_src, sprite_python_tex_dest)
-        k2.draw_texture_fit(sprite_C, sprite_C_src, sprite_C_tex_dest)
-        k2.draw_texture_fit(sprite_Cpp, sprite_Cpp_src, sprite_Cpp_tex_dest)
-        k2.draw_texture_fit(sprite_JS, sprite_JS_src, sprite_JS_tex_dest)
-        k2.draw_texture_fit(sprite_TS, sprite_TS_src, sprite_TS_tex_dest)
-        k2.draw_texture_fit(sprite_Java, sprite_Java_src, sprite_Java_tex_dest)
-        k2.draw_texture_fit(sprite_Assembly, sprite_Assembly_src, sprite_Assembly_tex_dest)
-        k2.draw_texture_fit(sprite_Rust, sprite_Rust_src, sprite_Rust_tex_dest)
-        k2.draw_texture_fit(sprite_Go, sprite_Go_src, sprite_Go_tex_dest)
-        k2.draw_texture_fit(sprite_Odin, sprite_Odin_src, sprite_Odin_tex_dest)
+    } else if screen_state == .Quiz_Popup {
 
+        show_quiz_screen("place holder for quiz question")
 
-        k2.present()
+    } else if screen_state == .Intro {
+        show_intro_screen()
+    
+    } else if screen_state == .Game_Over {
+            game_over_screen()
     }
+
+
+    k2.present()
 }
 
-init :: proc(){
+draw :: proc() {
 
-    sprites_textures = {
-		k2.load_texture_from_bytes(#load("./resources/sprites/python-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/C-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Cpp-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/JS-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/TS-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Java-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Assembly-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Go-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Rust-1.png")),
-		k2.load_texture_from_bytes(#load("./resources/sprites/Odin-1.png")),
-	}
 }
+
 
 shutdown :: proc() {
+
+	// for tex in enemy_sprites_textures {
+	// 	k2.destroy_texture(tex)	
+	// }
+    
+    k2.destroy_sound(audio_player_hit)
+
 	k2.shutdown()
 }
 
-step :: proc() -> bool{
-    return true
+ui_debug_options :: proc(){
+
+    k2.draw_rect({10, 100, 300, 600}, k2.BROWN)
+    text_size: f32 = 40 
+    text_mesg := " - THIS IS DEBUG UI MODE - "
+    text_width := k2.measure_text(text_mesg, text_size)
+    k2.draw_text(text_mesg, {f32(world_dim[0] / 2) - f32(text_width.x / 2), 20}, text_size, k2.YELLOW)
+    for text_size < 60 {
+        text_size += 2
+    }
+    player_pos_text := fmt.tprintfln("player position %v", player.pos)
+
+    k2.draw_text(player_pos_text, {20, 110}, 20, k2.YELLOW)
 }
 
+
+show_quiz_screen :: proc(text: string){
+    k2.clear(QUIZ_COLOR)
+    k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_RED)
+
+    
+    // popup simple dentro de la misma ventana
+    k2.draw_rect(
+        {
+            f32(settings.SCREEN_WIDTH) * 0.10, 
+            f32(settings.SCREEN_HEIGHT) * 0.10,  
+            f32(settings.SCREEN_WIDTH) * 0.80,  
+            f32(settings.SCREEN_HEIGHT) * 0.80
+        },
+        k2.DARK_RED
+    )
+
+    k2.draw_texture(quiz_time_text.tex, {20,20})
+    
+    k2.draw_text("Hit ESC to close", {f32(settings.SCREEN_WIDTH) - 300 , f32(settings.SCREEN_HEIGHT) - 50}, 25, k2.YELLOW)
+
+    k2.draw_text(text, {200, 150}, 30 , k2.WHITE)
+
+    if k2.key_went_down(.Escape) {
+        k2.play_sound(audio_player_hit)
+        screen_state = .Game
+    }
+}
+
+
+show_intro_screen :: proc(){
+    k2.clear(INTRO_COLOR)
+    
+    // FONDO / Brackground
+    k2.draw_texture(background_intro.tex, {0,0})
+
+    message_enter_play := "Hit ENTER to play!!"
+    message_enter_play_w := k2.measure_text(message_enter_play, 50)[0]
+    message_enter_play_pos :k2.Vec2 = {f32(settings.SCREEN_WIDTH / 2) - message_enter_play_w / 2, f32(settings.SCREEN_HEIGHT - 100)}
+    k2.draw_text(message_enter_play, message_enter_play_pos, 50, k2.YELLOW)
+    
+    title_image_pos : k2.Vec2 = { 
+        f32(settings.SCREEN_WIDTH / 2 - intro_title_game.tex.width/2), 
+        f32(settings.SCREEN_HEIGHT / 2  - intro_title_game.tex.height/2) 
+    }
+    k2.draw_texture(intro_title_game.tex, title_image_pos)
+
+
+    if k2.key_went_down(.Enter) {
+        screen_state = .Game
+    }
+}
+
+get_random_pos_in_world :: proc(world_dimensions: k2.Vec2) -> k2.Vec2 {
+    width := world_dimensions[0]
+    height := world_dimensions[1]
+
+    random_pos : k2.Vec2
+    random_pos[0] = rand.float32_range(50, width)
+    random_pos[1] = rand.float32_range(50, height)
+
+    return random_pos
+}
+
+game_over_screen :: proc(){
+    k2.clear(k2.BLACK)
+    k2.draw_texture(background_intro.tex, {0,0}, tint = k2.DARK_GREEN)
+
+
+    k2.draw_texture(
+        you_died_text.tex, 
+        {
+            f32(settings.SCREEN_WIDTH/2 - you_died_text.tex.width /2),
+            f32(settings.SCREEN_HEIGHT/2 - you_died_text.tex.height /2)
+        }
+    )
+    
+    if k2.key_went_down(.Enter) {
+        player.pos   = get_random_pos_in_world(world_dim)
+        screen_state = .Intro
+    }
+}

@@ -1,15 +1,17 @@
 .PHONY: run build alias test
 
-run: build
-	@./builds/main
-
+run:
+	./lang_battle_q_game_karl2d
 
 scratch-buffer: 
 	odin run scratch_buffer
 
 
+build-speed:
+	odin build . -o:speed
+
 build:
-	@odin build . -out:./builds/main
+	odin build . 
 
 alias:
 	@printf '%s\n' 'alias r="./builds/main"' 'alias b="odin build . -out:./builds/main"'
