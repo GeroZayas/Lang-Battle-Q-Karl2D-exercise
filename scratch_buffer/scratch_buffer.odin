@@ -7,6 +7,7 @@ import "core:encoding/json"
 import "core:fmt"
 import "core:log"
 import "core:os"
+import "core:mem"
 
 SCREEN_WIDTH :: 1000
 SCREEN_HEIGHT :: 900
@@ -35,6 +36,7 @@ Button :: struct {
 	rect:    k2.Rect,
 	text:    string,
 	clicked: bool,
+	color : k2.Color
 }
 
 text_pos: k2.Vec2 = {20, 20}
@@ -59,6 +61,9 @@ current_correct_answer : string
 
 message_after_selection : string
 
+answer_buttons: [dynamic]Button
+
+
 
 // =============================================================================================
 // PROCEDURES
@@ -77,6 +82,7 @@ get_json :: proc(path: string) -> ([]u8, bool) {
 init :: proc() {
 	k2.init(SCREEN_WIDTH, SCREEN_HEIGHT, "Scratch Buffer")
 	data, ok := get_json("resources/quiz/level_1_python.json")
+	defer delete(data)
 	if !ok {
 		log.error("Error reading the json data")
 	}
@@ -130,7 +136,8 @@ step :: proc() -> bool {
 		mouse_collision = mouse_on_button(col.rect)
 		// foo := fmt.tprintfln("%v", col.text)
 		if mouse_collision {
-			text(col.text, {col.rect.x + col.rect.w + 10, col.rect.y + col.rect.h / 2 - 15}, 30, k2.RED)
+			// text(col.text, {col.rect.x + col.rect.w + 10, col.rect.y + col.rect.h / 2 - 15}, 30, k2.RED)
+			k2.draw_circle({col.rect.x + col.rect.w, col.rect.y + col.rect.h / 2}, 10, k2.YELLOW)
 			if k2.mouse_button_went_down(.Left) {
 				if col.text == current_correct_answer {
 					message_after_selection = "CORRECT"
@@ -161,12 +168,11 @@ step :: proc() -> bool {
 show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
 	initial_pos: k2.Vec2 = {100, 400}
 	index := 0
-	answer_buttons: [dynamic]Button
 	for res in responses {
 		// rect: k2.Rect = {initial_pos.x, initial_pos.y, 300, 40}
-		foo: k2.Rect = {initial_pos.x, initial_pos.y, 300, 40}
+		foo: k2.Rect = {initial_pos.x, initial_pos.y, 100, 40}
 		button := create_button(foo, res)
-		k2.draw_rect(button.rect, k2.DARK_BLUE)
+		k2.draw_rect(button.rect, button.color)
 		k2.draw_text(text = button.text, position = initial_pos, font_size = 40, color = k2.YELLOW)
 		append(&answer_buttons, button)
 		initial_pos.y += 50
@@ -175,7 +181,7 @@ show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
 }
 
 create_button :: proc(rect: k2.Rect, text: string) -> Button {
-	button := Button{rect, text, false}
+	button := Button{rect, text, false, k2.DARK_BLUE}
 	return button
 }
 
@@ -197,14 +203,29 @@ show_message_after_selection :: proc(message: string){
 }
 
 shutdown :: proc() {
-	// k2.destroy_texture(tex)
+	delete(answer_buttons)
+	delete(current_correct_answer)
+	delete(message)
+	k2.destroy_texture(tex)
 	k2.shutdown()
 }
 
 // This is not run by the web version, but it makes this program also work on non-web!
 main :: proc() {
 	context.logger = log.create_console_logger()
+	track: mem.Tracking_Allocator
+	mem.tracking_allocator_init(&track, context.allocator)
+	context.allocator = mem.tracking_allocator(&track)
+
 	init()
 	for step() {}
 	shutdown()
+
+	if len(track.allocation_map) > 0 {
+		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+		for _, entry in track.allocation_map {
+			fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+		}
+	}
+	mem.tracking_allocator_destroy(&track)
 }
