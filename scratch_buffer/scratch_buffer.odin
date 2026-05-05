@@ -34,10 +34,14 @@ colors : map[string]k2.Color = {
 text_pos: k2.Vec2 = {20, 20}
 
 quiz_doc : QuizDoc
-
 current_question : string
-
 message : string
+show_answers: bool = false
+
+// EASY ACCESS
+text :: k2.draw_text
+
+debug_mode: bool = false
 
 get_json :: proc(path: string) -> ([]u8, bool){
 	data, d_err := os.read_entire_file_from_path(name = path, allocator = context.allocator)
@@ -84,10 +88,39 @@ step :: proc() -> bool{
 
     if k2.key_went_down(.Enter) {
     	message = current_question
+     	show_answers = true
+    }
+
+    if show_answers {
+    	show_answer_boxes(quiz_doc.all_questions["1"].answers)
+    }
+
+    if k2.key_went_down(.F2){
+    	debug_mode = !debug_mode
+    }
+
+    if debug_mode {
+	   	text("DEBUG MODE", {10, 10}, 60, color = k2.RED)
+	   	mouse_on_button()
     }
 
     k2.present()
     return true
+}
+
+show_answer_boxes :: proc(responses: [4]string){
+	initial_pos : k2.Vec2 = {100, 400}
+	for res in responses {
+		k2.draw_rect({initial_pos.x, initial_pos.y, 300, 40}, k2.DARK_BLUE)
+		k2.draw_text(text=res, position = initial_pos,font_size = 40, color = k2.YELLOW)
+		initial_pos.y += 50
+	}
+}
+
+mouse_on_button :: proc() -> bool{
+	mp := k2.get_mouse_position()
+	k2.draw_text("MOUSE-HERE", mp, 20,k2.YELLOW)
+	return true
 }
 
 shutdown :: proc() {
