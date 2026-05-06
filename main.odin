@@ -9,7 +9,7 @@ import "core:log"
 import "core:math/linalg"
 import "core:math/rand"
 import "core:mem"
-import "core:os"
+// import "core:os"
 
 Rect :: k2.Rect
 Vec2 :: k2.Vec2
@@ -62,6 +62,26 @@ Background_Texture :: struct {
 	tex: k2.Texture,
 }
 
+QuestionSet :: struct {
+	type:           string,
+	question:       string,
+	answers:        [4]string,
+	correct_answer: string,
+}
+
+QuizDoc :: struct {
+	level:         int,
+	language:      string,
+	all_questions: map[string]QuestionSet,
+}
+
+Button :: struct {
+	rect:    k2.Rect,
+	text:    string,
+	clicked: bool,
+	color:   k2.Color,
+}
+
 Quiz_Boxes :: struct {
 	boxes_array: [dynamic]Quiz_Box,
 }
@@ -78,6 +98,7 @@ Player :: struct {
 	pos:   Vec2,
 	lives: int,
 	dir:   Direction,
+	score: int,
 }
 
 
@@ -91,6 +112,32 @@ Screen_State :: enum {
 }
 
 answered_questions: [dynamic]string
+
+print :: fmt.println
+
+mouse_collision := false
+
+current_correct_answer: string
+
+message_after_selection: string
+
+answer_buttons: [dynamic]Button
+
+question_index_array: [4]string
+question_index: int
+
+data: []u8
+
+
+previous_mouse := false
+current_mouse := false
+pressed := false
+
+quiz_doc: QuizDoc
+q_i : string
+current_question: string
+message: string
+show_answers: bool = false
 
 screen_state := Screen_State.Intro
 
@@ -111,6 +158,10 @@ intro: bool
 
 world_dim: k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
 
+colliders : [dynamic]k2.Rect
+btn_colliders : [dynamic]Button
+
+
 // ------------------------------------------------------------------------
 // TEXTURES FOR INTRO SCREEN
 intro_title_game: Game_Title_Texture
@@ -126,31 +177,10 @@ audio_quiz_correct: k2.Audio_Buffer
 audio_quiz_wrong: k2.Audio_Buffer
 
 
-// ------------------------------------------------------------------------
+// =============================================================================================
 // PROCEDURES
-// ------------------------------------------------------------------------
+// =============================================================================================
 
-main :: proc() {
-	track: mem.Tracking_Allocator
-	mem.tracking_allocator_init(&track, context.allocator)
-	context.allocator = mem.tracking_allocator(&track)
-
-	context.logger = log.create_console_logger()
-	// ------------------------------------------------------------------------
-	// THE MAIN LOOP
-	init()
-	for step() {}
-	shutdown()
-	// ------------------------------------------------------------------------
-
-	if len(track.allocation_map) > 0 {
-		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
-		for _, entry in track.allocation_map {
-			fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
-		}
-	}
-	mem.tracking_allocator_destroy(&track)
-}
 
 init :: proc() {
 	k2.init(
@@ -162,6 +192,7 @@ init :: proc() {
 	current_level_idx = 0
 
 	intro = true
+	colliders = make([dynamic]k2.Rect, context.temp_allocator)
 
 	screen_w := f32(settings.SCREEN_WIDTH)
 	screen_h := f32(settings.SCREEN_HEIGHT)
@@ -259,7 +290,11 @@ init :: proc() {
 		tex   = player_tex,
 		pos   = {500, 450},
 		lives = 3,
+		score = 0,
 	}
+
+	question_index_array = {"1", "2", "3", "4"}
+	question_index = 0
 
 	intro_title_game = {
 		tex = intro_title_game_tex,
@@ -317,7 +352,7 @@ init :: proc() {
 		},
 	)
 
-	fmt.println(quiz_boxes)
+	// fmt.println(quiz_boxes)
 
 
 }
@@ -336,7 +371,6 @@ step :: proc() -> bool {
 }
 
 update :: proc() {
-
 	if game_finished {
 		return
 	}
@@ -390,7 +424,7 @@ update :: proc() {
 		dt := k2.get_frame_time()
 		to_move := player_movement * dt * PLAYER_VELOCITY
 
-		colliders := make([dynamic]k2.Rect, context.temp_allocator)
+
 
 		for box in quiz_boxes.boxes_array {
 			k2.draw_texture(
@@ -501,10 +535,14 @@ update :: proc() {
 		}
 		// ------------------------------------------------------------------------
 
+		// OJO
+		q_i = question_index_array[question_index]
+
+		current_question = quiz_doc.all_questions[q_i].question
+		current_correct_answer = quiz_doc.all_questions[q_i].correct_answer
 
 	} else if screen_state == .Quiz_Popup {
-
-		show_quiz_screen("place holder for quiz question")
+		show_quiz_screen()
 
 	} else if screen_state == .Intro {
 		show_intro_screen()
@@ -512,7 +550,6 @@ update :: proc() {
 	} else if screen_state == .Game_Over {
 		game_over_screen()
 	}
-
 
 	k2.present()
 }
@@ -531,6 +568,29 @@ shutdown :: proc() {
 	k2.destroy_sound(audio_player_hit)
 
 	k2.shutdown()
+}
+
+
+main :: proc() {
+	track: mem.Tracking_Allocator
+	mem.tracking_allocator_init(&track, context.allocator)
+	context.allocator = mem.tracking_allocator(&track)
+
+	context.logger = log.create_console_logger()
+	// ------------------------------------------------------------------------
+	// THE MAIN LOOP
+	init()
+	for step() {}
+	shutdown()
+	// ------------------------------------------------------------------------
+
+	if len(track.allocation_map) > 0 {
+		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
+		for _, entry in track.allocation_map {
+			fmt.eprintf("- %v bytes @ %v\n", entry.size, entry.location)
+		}
+	}
+	mem.tracking_allocator_destroy(&track)
 }
 
 ui_debug_options :: proc() {
@@ -553,11 +613,31 @@ ui_debug_options :: proc() {
 	k2.draw_text(player_pos_text, {20, 110}, 20, k2.YELLOW)
 }
 
+show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
+	initial_pos: k2.Vec2 = {100, 400}
+	index := 0
+	for res in responses {
+		// rect: k2.Rect = {initial_pos.x, initial_pos.y, 300, 40}
+		foo: k2.Rect = {initial_pos.x, initial_pos.y, 300, 40}
+		button := create_button(foo, res)
+		k2.draw_rect(button.rect, button.color)
+		k2.draw_text(text = button.text, position = initial_pos, font_size = 40, color = k2.YELLOW)
+		append(&answer_buttons, button)
+		initial_pos.y += 50
+	}
+	return answer_buttons
+}
 
-show_quiz_screen :: proc(text: string) {
+create_button :: proc(rect: k2.Rect, text: string) -> Button {
+	button := Button{rect, text, false, k2.DARK_BLUE}
+	return button
+}
+
+show_quiz_screen :: proc() {
 	k2.clear(QUIZ_COLOR)
 	k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_RED)
 
+	btn_colliders := make([dynamic]Button, context.temp_allocator)
 
 	// popup simple dentro de la misma ventana
 	k2.draw_rect(
@@ -570,6 +650,12 @@ show_quiz_screen :: proc(text: string) {
 		k2.DARK_RED,
 	)
 
+	answer_buttons = show_answer_buttons(quiz_doc.all_questions[q_i].answers)
+	
+	for answer_btn in answer_buttons {
+		append(&btn_colliders, answer_btn)
+	}
+
 	k2.draw_texture(quiz_time_text.tex, {20, 20})
 
 	k2.draw_text(
@@ -579,7 +665,7 @@ show_quiz_screen :: proc(text: string) {
 		k2.YELLOW,
 	)
 
-	k2.draw_text(text, {200, 150}, 30, k2.WHITE)
+	k2.draw_text("TESTING", {200, 150}, 30, k2.WHITE)
 
 	if k2.key_went_down(.Escape) {
 		k2.play_sound(audio_player_hit)
