@@ -7,8 +7,7 @@ import "core:encoding/json"
 import "core:fmt"
 import "core:log"
 import "core:mem"
-import vmem "core:mem/virtual"
-import "core:os"
+// import "core:os"
 
 SCREEN_WIDTH :: 1000
 SCREEN_HEIGHT :: 900
@@ -72,6 +71,8 @@ answer_buttons: [dynamic]Button
 question_index_array: [4]string
 question_index: int
 
+data : []u8
+
 previous_mouse := false
 current_mouse := false
 pressed := false
@@ -83,43 +84,42 @@ player: Player
 // PROCEDURES
 // =============================================================================================
 
-get_json :: proc(path: string) -> ([]u8, bool) {
-	data, d_err := os.read_entire_file_from_path(name = path, allocator = context.allocator)
-	if d_err != nil {
-		log.error("ERR:", d_err)
-		fmt.println("There has been a problem reading the file")
-		return {}, false
-	}
-	return data, true
-}
+// get_json :: proc(path: string) -> ([]u8, bool) {
+// 	data, d_err := os.read_entire_file_from_path(name = path, allocator = context.allocator)
+// 	if d_err != nil {
+// 		log.error("ERR:", d_err)
+// 		fmt.println("There has been a problem reading the file")
+// 		return {}, false
+// 	}
+// 	return data, true
+// }
 
-init :: proc(arena_alloc: mem.Allocator) {
+// init :: proc(arena_alloc: mem.Allocator) {
+init :: proc() {
 	k2.init(SCREEN_WIDTH, SCREEN_HEIGHT, "Scratch Buffer")
-	data, ok := get_json("resources/quiz/level_1_python.json")
-	defer delete(data)
-	if !ok {
-		log.error("Error reading the json data")
-	}
+	// data, ok := get_json("resources/quiz/level_1_python.json")
+	data = #load("/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/quiz/level_1_python.json")
 
 	tex = k2.load_texture_from_file("scratch_buffer/new_piskel_1-1-small.png")
 
-	unm_err := json.unmarshal(data, &quiz_doc, allocator = arena_alloc)
+	// unm_err := json.unmarshal(data, &quiz_doc, allocator = arena_alloc)
+	unm_err := json.unmarshal(data, &quiz_doc)
 	if unm_err != nil {
 		log.debug(unm_err)
 	}
 	// fmt.println(quiz_doc)
 	message_after_selection = ""
 
-	all_questions := quiz_doc.all_questions
+	// all_questions := quiz_doc.all_questions
 
-	print(typeid_of(type_of(all_questions)))
+	// print(typeid_of(type_of(all_questions)))
 
-	for q_num in all_questions {
-		print(all_questions[q_num].type)
-		print(all_questions[q_num].question)
-		print(all_questions[q_num].answers)
-		print(all_questions[q_num].correct_answer)
-	}
+	// for q_num in all_questions {
+	// 	print(all_questions[q_num].type)
+	// 	print(all_questions[q_num].question)
+	// 	print(all_questions[q_num].answers)
+	// 	print(all_questions[q_num].correct_answer)
+	// }
 
 	question_index_array = {"1", "2", "3", "4"}
 	question_index = 0
@@ -290,6 +290,7 @@ show_message_after_selection :: proc(message: string) {
 shutdown :: proc() {
 	// delete(colors)
 	delete(answer_buttons)
+	delete(quiz_doc.all_questions)
 	// delete(current_correct_answer)
 	// k2.destroy_texture(tex)
 	k2.shutdown()
@@ -302,18 +303,18 @@ main :: proc() {
 	mem.tracking_allocator_init(&track, context.allocator)
 	context.allocator = mem.tracking_allocator(&track)
 
-	// This creates a growing virtual memory arena. It uses virtual memory and
-	// can grow as things are added to it.
-	arena: vmem.Arena
-	arena_err := vmem.arena_init_growing(&arena)
-	ensure(arena_err == nil)
-	arena_alloc := vmem.arena_allocator(&arena)
+	// arena_mem := make([]byte, 1*mem.Megabyte)
 
+	// arena : mem.Arena
+	// mem.arena_init(&arena, arena_mem)
+	// arena_alloc := mem.arena_allocator(&arena)
 
-	init(arena_alloc)
+	// init(arena_alloc)
+	init()
 	for step() {}
 	shutdown()
 
+	// delete(arena_mem)
 	if len(track.allocation_map) > 0 {
 		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
 		for _, entry in track.allocation_map {
@@ -321,5 +322,5 @@ main :: proc() {
 		}
 	}
 	mem.tracking_allocator_destroy(&track)
-	vmem.arena_destroy(&arena)
+	// Destroy the arena
 }
