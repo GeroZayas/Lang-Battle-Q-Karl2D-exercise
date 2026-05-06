@@ -10,8 +10,6 @@ import "core:math/linalg"
 import "core:math/rand"
 import "core:mem"
 import "core:os"
-import "vendor:commonmark"
-
 
 Rect :: k2.Rect
 Vec2 :: k2.Vec2
