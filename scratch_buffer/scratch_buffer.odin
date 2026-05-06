@@ -7,7 +7,6 @@ import "core:encoding/json"
 import "core:fmt"
 import "core:log"
 import "core:mem"
-// import "core:os"
 
 SCREEN_WIDTH :: 1000
 SCREEN_HEIGHT :: 900
@@ -84,42 +83,18 @@ player: Player
 // PROCEDURES
 // =============================================================================================
 
-// get_json :: proc(path: string) -> ([]u8, bool) {
-// 	data, d_err := os.read_entire_file_from_path(name = path, allocator = context.allocator)
-// 	if d_err != nil {
-// 		log.error("ERR:", d_err)
-// 		fmt.println("There has been a problem reading the file")
-// 		return {}, false
-// 	}
-// 	return data, true
-// }
-
-// init :: proc(arena_alloc: mem.Allocator) {
 init :: proc() {
 	k2.init(SCREEN_WIDTH, SCREEN_HEIGHT, "Scratch Buffer")
-	// data, ok := get_json("resources/quiz/level_1_python.json")
 	data = #load("/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/quiz/level_1_python.json")
 
 	tex = k2.load_texture_from_file("scratch_buffer/new_piskel_1-1-small.png")
 
-	// unm_err := json.unmarshal(data, &quiz_doc, allocator = arena_alloc)
 	unm_err := json.unmarshal(data, &quiz_doc)
 	if unm_err != nil {
 		log.debug(unm_err)
 	}
 	// fmt.println(quiz_doc)
 	message_after_selection = ""
-
-	// all_questions := quiz_doc.all_questions
-
-	// print(typeid_of(type_of(all_questions)))
-
-	// for q_num in all_questions {
-	// 	print(all_questions[q_num].type)
-	// 	print(all_questions[q_num].question)
-	// 	print(all_questions[q_num].answers)
-	// 	print(all_questions[q_num].correct_answer)
-	// }
 
 	question_index_array = {"1", "2", "3", "4"}
 	question_index = 0
@@ -161,9 +136,6 @@ step :: proc() -> bool {
 
 	current_question = quiz_doc.all_questions[q_i].question
 	current_correct_answer = quiz_doc.all_questions[q_i].correct_answer
-	// log.debug(current_question)
-	// log.debug("question_index", question_index)
-	// log.debug("question_index_array", question_index_array)
 
 	if k2.key_went_down(.Enter) {
 		if question_index == 0 {
@@ -183,10 +155,8 @@ step :: proc() -> bool {
 
 	for col in colliders {
 		mouse_collision = mouse_on_button(col.rect)
-		// foo := fmt.tprintfln("%v", col.text)
 		if mouse_collision {
 			message = current_question
-			// text(col.text, {col.rect.x + col.rect.w + 10, col.rect.y + col.rect.h / 2 - 15}, 30, k2.RED)
 			k2.draw_circle({col.rect.x + col.rect.w, col.rect.y + col.rect.h / 2}, 10, k2.YELLOW)
 			if k2.mouse_button_went_down(.Left) {
 				current_mouse = true
@@ -218,12 +188,9 @@ step :: proc() -> bool {
 		question_index = 0
 	}
 
-	// log.debug(question_index)
-
 	if message_after_selection != "" {
 		show_message_after_selection(message_after_selection)
 	}
-
 
 	if k2.key_went_down(.F2) {
 		debug_mode = !debug_mode
@@ -239,7 +206,6 @@ step :: proc() -> bool {
 
 	return true
 }
-
 
 show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
 	initial_pos: k2.Vec2 = {100, 400}
@@ -288,11 +254,8 @@ show_message_after_selection :: proc(message: string) {
 }
 
 shutdown :: proc() {
-	// delete(colors)
 	delete(answer_buttons)
 	delete(quiz_doc.all_questions)
-	// delete(current_correct_answer)
-	// k2.destroy_texture(tex)
 	k2.shutdown()
 }
 
@@ -303,18 +266,10 @@ main :: proc() {
 	mem.tracking_allocator_init(&track, context.allocator)
 	context.allocator = mem.tracking_allocator(&track)
 
-	// arena_mem := make([]byte, 1*mem.Megabyte)
-
-	// arena : mem.Arena
-	// mem.arena_init(&arena, arena_mem)
-	// arena_alloc := mem.arena_allocator(&arena)
-
-	// init(arena_alloc)
 	init()
 	for step() {}
 	shutdown()
-
-	// delete(arena_mem)
+	
 	if len(track.allocation_map) > 0 {
 		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
 		for _, entry in track.allocation_map {
