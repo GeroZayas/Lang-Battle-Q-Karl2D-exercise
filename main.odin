@@ -191,6 +191,16 @@ init :: proc() {
 	)
 	current_level_idx = 0
 
+	data = #load("/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/quiz/level_1_python.json")
+
+	unm_err := json.unmarshal(data, &quiz_doc)
+	if unm_err != nil {
+		log.debug(unm_err)
+	}
+	// fmt.println(quiz_doc)
+	message_after_selection = ""
+
+
 	intro = true
 	colliders = make([dynamic]k2.Rect, context.temp_allocator)
 
@@ -278,8 +288,9 @@ init :: proc() {
 	// ------------------------------------------------------------------------
 	// AUDIOS and SOUNDS
 	audio_player_hit = k2.load_sound_from_bytes(
-		#load("./resources/audios/floraphonic-arcade-ui-6-229503.wav"),
+		#load("/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/audios/floraphonic-arcade-ui-6-229503.wav"),
 	)
+
 	log.debug(audio_player_hit)
 	// audio_intro_music = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
 	// audio_quiz_correct = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
@@ -535,11 +546,7 @@ update :: proc() {
 		}
 		// ------------------------------------------------------------------------
 
-		// OJO
-		q_i = question_index_array[question_index]
 
-		current_question = quiz_doc.all_questions[q_i].question
-		current_correct_answer = quiz_doc.all_questions[q_i].correct_answer
 
 	} else if screen_state == .Quiz_Popup {
 		show_quiz_screen()
@@ -650,8 +657,18 @@ show_quiz_screen :: proc() {
 		k2.DARK_RED,
 	)
 
+	// OJO
+	q_i = question_index_array[question_index]
+	// log.debug(q_i)
+
+	current_question = quiz_doc.all_questions[q_i].question
+	// log.debug("current question:", current_question)
+	// log.debug("current question:", quiz_doc)
+
+	current_correct_answer = quiz_doc.all_questions[q_i].correct_answer
+
 	answer_buttons = show_answer_buttons(quiz_doc.all_questions[q_i].answers)
-	
+
 	for answer_btn in answer_buttons {
 		append(&btn_colliders, answer_btn)
 	}
