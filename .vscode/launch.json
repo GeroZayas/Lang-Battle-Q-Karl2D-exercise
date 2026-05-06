@@ -23,6 +23,26 @@
           "ignoreFailures": true
         }
       ]
+    },
+    {
+      "name": "Debug Odin app",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/scratch_buffer/scratch_buffer",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "preLaunchTask": "odin: build debug scratch_buffer",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
     }
   ]
 }

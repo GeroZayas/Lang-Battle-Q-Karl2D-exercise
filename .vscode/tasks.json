@@ -28,6 +28,16 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "odin: build debug scratch_buffer",
+      "type": "shell",
+      "command": "odin",
+      "args": ["build", "scratch_buffer/scratch_buffer.odin", "-file","-debug", "-o:none", "-out:./scratch_buffer/scratch_buffer"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ]
 }

@@ -3,10 +3,10 @@
 package scratch_buffer_2
 
 import k2 "../../karl2d"
-import "core:os"
-import "core:fmt"
 import "core:encoding/json"
+import "core:fmt"
 import "core:log"
+import "core:os"
 
 JSON_FILE_PATH :: "resources/quiz/level_1_python.json"
 
