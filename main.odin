@@ -9,6 +9,7 @@ import "core:log"
 import "core:math/linalg"
 import "core:math/rand"
 import "core:mem"
+import "core:time"
 // import "core:os"
 
 Rect :: k2.Rect
@@ -134,7 +135,7 @@ current_mouse := false
 pressed := false
 
 quiz_doc: QuizDoc
-q_i : string
+q_i: string
 current_question: string
 message: string
 show_answers: bool = false
@@ -158,8 +159,8 @@ intro: bool
 
 world_dim: k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
 
-colliders : [dynamic]k2.Rect
-btn_colliders : [dynamic]Button
+colliders: [dynamic]k2.Rect
+btn_colliders: [dynamic]Button
 
 
 // ------------------------------------------------------------------------
@@ -191,7 +192,9 @@ init :: proc() {
 	)
 	current_level_idx = 0
 
-	data = #load("/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/quiz/level_1_python.json")
+	data = #load(
+		"/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/quiz/level_1_python.json",
+	)
 
 	unm_err := json.unmarshal(data, &quiz_doc)
 	if unm_err != nil {
@@ -288,7 +291,9 @@ init :: proc() {
 	// ------------------------------------------------------------------------
 	// AUDIOS and SOUNDS
 	audio_player_hit = k2.load_sound_from_bytes(
-		#load("/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/audios/floraphonic-arcade-ui-6-229503.wav"),
+		#load(
+			"/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/audios/floraphonic-arcade-ui-6-229503.wav",
+		),
 	)
 
 	log.debug(audio_player_hit)
@@ -391,6 +396,10 @@ update :: proc() {
 
 		k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_BLUE)
 
+		if player.lives == 0 {
+			time.sleep(1 * time.Second)
+			screen_state = .Game_Over
+		}
 
 		k2.draw_text(title_text_value, title_pos, title_fs, k2.LIGHT_YELLOW)
 
@@ -436,7 +445,6 @@ update :: proc() {
 
 		dt := k2.get_frame_time()
 		to_move := player_movement * dt * PLAYER_VELOCITY
-
 
 
 		for box in quiz_boxes.boxes_array {
@@ -549,7 +557,6 @@ update :: proc() {
 		// ------------------------------------------------------------------------
 
 
-
 	} else if screen_state == .Quiz_Popup {
 		show_quiz_screen()
 
@@ -560,10 +567,9 @@ update :: proc() {
 		game_over_screen()
 	}
 
-	previous_mouse = current_mouse
-
-
 	k2.present()
+
+	previous_mouse = current_mouse
 }
 
 draw :: proc() {
@@ -633,7 +639,12 @@ show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
 		foo: k2.Rect = {initial_pos.x, initial_pos.y, 300, 40}
 		button := create_button(foo, res)
 		k2.draw_rect(button.rect, button.color)
-		k2.draw_text(text = button.text, position = {initial_pos[0] + 10, initial_pos[1] + 3}, font_size = 35, color = k2.YELLOW)
+		k2.draw_text(
+			text = button.text,
+			position = {initial_pos[0] + 10, initial_pos[1] + 3},
+			font_size = 35,
+			color = k2.YELLOW,
+		)
 		append(&answer_buttons, button)
 		initial_pos.y += 50
 	}
@@ -702,17 +713,20 @@ show_quiz_screen :: proc() {
 			} else {
 				current_mouse = false
 			}
-		}	
+		}
 	}
 
 	pressed = current_mouse && !previous_mouse
 
+
 	if pressed {
 		if message_after_selection == "CORRECT" {
 			player.score += 1
+			screen_state = .Game
 		}
 		if message_after_selection == "WRONG" {
 			player.lives -= 1
+			screen_state = .Game
 		}
 
 		question_index = question_index + 1
@@ -795,14 +809,18 @@ game_over_screen :: proc() {
 
 
 show_player_score :: proc(player: Player) {
-	a_rect: k2.Rect = {f32(settings.SCREEN_WIDTH - 320), f32(settings.SCREEN_HEIGHT - 200), 200, 100}
+	a_rect: k2.Rect = {
+		f32(settings.SCREEN_WIDTH - 320),
+		f32(settings.SCREEN_HEIGHT - 200),
+		200,
+		100,
+	}
 	k2.draw_rect(a_rect, k2.WHITE)
 	lives := fmt.tprintf("LIVES: %v", player.lives)
 	score := fmt.tprintf("SCORE: %v", player.score)
 	k2.draw_text(lives, {a_rect.x + 5, a_rect.y + 5}, 30, k2.DARK_BLUE)
 	k2.draw_text(score, {a_rect.x + 5, a_rect.y + 40}, 30, k2.DARK_BLUE)
 }
-
 
 
 mouse_on_button :: proc(button_rect: k2.Rect) -> bool {
@@ -829,6 +847,3 @@ show_message_after_selection :: proc(message: string) {
 	k2.draw_rect({150, f32(settings.SCREEN_HEIGHT - 205), 300, 60}, k2.WHITE)
 	k2.draw_text(message, {160, f32(settings.SCREEN_HEIGHT - 200)}, 50, color)
 }
-
-
-
