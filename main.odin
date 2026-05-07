@@ -560,6 +560,9 @@ update :: proc() {
 		game_over_screen()
 	}
 
+	previous_mouse = current_mouse
+
+
 	k2.present()
 }
 
@@ -700,6 +703,23 @@ show_quiz_screen :: proc() {
 				current_mouse = false
 			}
 		}	
+	}
+
+	pressed = current_mouse && !previous_mouse
+
+	if pressed {
+		if message_after_selection == "CORRECT" {
+			player.score += 1
+		}
+		if message_after_selection == "WRONG" {
+			player.lives -= 1
+		}
+
+		question_index = question_index + 1
+	}
+
+	if question_index > 3 {
+		question_index = 0
 	}
 
 	if message_after_selection != "" {
