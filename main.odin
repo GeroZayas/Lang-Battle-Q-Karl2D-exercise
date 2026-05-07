@@ -139,7 +139,7 @@ current_question: string
 message: string
 show_answers: bool = false
 
-screen_state := Screen_State.Intro
+screen_state := Screen_State.Quiz_Popup
 
 PLAYER_VELOCITY: f32 = 300
 ENEMY_SPEED: u8 = 5
@@ -402,7 +402,9 @@ update :: proc() {
 		odin_movement: Vec2
 
 		if k2.key_went_down(.F2) do UI_DEBUG = !UI_DEBUG
+		if k2.key_went_down(.F3) do screen_state = .Quiz_Popup
 
+		// screen_state
 		if UI_DEBUG {
 			ui_debug_options()
 		}
@@ -601,10 +603,9 @@ main :: proc() {
 }
 
 ui_debug_options :: proc() {
-
 	k2.draw_rect({10, 100, 300, 600}, k2.BROWN)
 	text_size: f32 = 40
-	text_mesg := " - THIS IS DEBUG UI MODE - "
+	text_mesg := " - THIS IS DEBUG UI MODE\n press F3 for Quiz Screen- "
 	text_width := k2.measure_text(text_mesg, text_size)
 	k2.draw_text(
 		text_mesg,
@@ -618,17 +619,18 @@ ui_debug_options :: proc() {
 	player_pos_text := fmt.tprintfln("player position %v", player.pos)
 
 	k2.draw_text(player_pos_text, {20, 110}, 20, k2.YELLOW)
+
 }
 
 show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
-	initial_pos: k2.Vec2 = {100, 400}
+	initial_pos: k2.Vec2 = {150, 300}
 	index := 0
 	for res in responses {
 		// rect: k2.Rect = {initial_pos.x, initial_pos.y, 300, 40}
 		foo: k2.Rect = {initial_pos.x, initial_pos.y, 300, 40}
 		button := create_button(foo, res)
 		k2.draw_rect(button.rect, button.color)
-		k2.draw_text(text = button.text, position = initial_pos, font_size = 40, color = k2.YELLOW)
+		k2.draw_text(text = button.text, position = {initial_pos[0] + 10, initial_pos[1] + 3}, font_size = 35, color = k2.YELLOW)
 		append(&answer_buttons, button)
 		initial_pos.y += 50
 	}
@@ -636,7 +638,7 @@ show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
 }
 
 create_button :: proc(rect: k2.Rect, text: string) -> Button {
-	button := Button{rect, text, false, k2.DARK_BLUE}
+	button := Button{rect, text, false, k2.RED}
 	return button
 }
 
@@ -682,7 +684,9 @@ show_quiz_screen :: proc() {
 		k2.YELLOW,
 	)
 
-	k2.draw_text("TESTING", {200, 150}, 30, k2.WHITE)
+	show_player_score(player)
+
+	k2.draw_text(current_question, {150, 150}, 40, k2.LIGHT_YELLOW)
 
 	if k2.key_went_down(.Escape) {
 		k2.play_sound(audio_player_hit)
@@ -745,4 +749,14 @@ game_over_screen :: proc() {
 		player.pos = get_random_pos_in_world(world_dim)
 		screen_state = .Intro
 	}
+}
+
+
+show_player_score :: proc(player: Player) {
+	a_rect: k2.Rect = {f32(settings.SCREEN_WIDTH - 320), f32(settings.SCREEN_HEIGHT - 200), 200, 100}
+	k2.draw_rect(a_rect, k2.WHITE)
+	lives := fmt.tprintf("LIVES: %v", player.lives)
+	score := fmt.tprintf("SCORE: %v", player.score)
+	k2.draw_text(lives, {a_rect.x + 5, a_rect.y + 5}, 30, k2.DARK_BLUE)
+	k2.draw_text(score, {a_rect.x + 5, a_rect.y + 40}, 30, k2.DARK_BLUE)
 }
