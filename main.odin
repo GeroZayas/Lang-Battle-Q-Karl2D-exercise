@@ -684,6 +684,28 @@ show_quiz_screen :: proc() {
 		k2.YELLOW,
 	)
 
+	for col in btn_colliders {
+		mouse_collision = mouse_on_button(col.rect)
+		if mouse_collision {
+			message = current_question
+			k2.draw_circle({col.rect.x + col.rect.w, col.rect.y + col.rect.h / 2}, 10, k2.YELLOW)
+			if k2.mouse_button_went_down(.Left) {
+				current_mouse = true
+				if col.text == current_correct_answer {
+					message_after_selection = "CORRECT"
+				} else {
+					message_after_selection = "WRONG"
+				}
+			} else {
+				current_mouse = false
+			}
+		}	
+	}
+
+	if message_after_selection != "" {
+		show_message_after_selection(message_after_selection)
+	}
+
 	show_player_score(player)
 
 	k2.draw_text(current_question, {150, 150}, 40, k2.LIGHT_YELLOW)
@@ -760,3 +782,33 @@ show_player_score :: proc(player: Player) {
 	k2.draw_text(lives, {a_rect.x + 5, a_rect.y + 5}, 30, k2.DARK_BLUE)
 	k2.draw_text(score, {a_rect.x + 5, a_rect.y + 40}, 30, k2.DARK_BLUE)
 }
+
+
+
+mouse_on_button :: proc(button_rect: k2.Rect) -> bool {
+	mp := k2.get_mouse_position()
+	mx := mp[0]
+	my := mp[1]
+	if mx >= button_rect.x &&
+	   mx <= button_rect.x + button_rect.w &&
+	   my >= button_rect.y &&
+	   my <= button_rect.y + button_rect.h {
+		return true
+	}
+	return false
+}
+
+
+show_message_after_selection :: proc(message: string) {
+	color: k2.Color
+	if message == "WRONG" {
+		color = k2.DARK_RED
+	} else {
+		color = k2.GREEN
+	}
+	k2.draw_rect({150, f32(settings.SCREEN_HEIGHT - 205), 300, 60}, k2.WHITE)
+	k2.draw_text(message, {160, f32(settings.SCREEN_HEIGHT - 200)}, 50, color)
+}
+
+
+
