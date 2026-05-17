@@ -8,14 +8,14 @@
       "name": "Debug Odin app",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/builds/main",
+      "program": "${workspaceFolder}/main",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}",
       "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",
-      "preLaunchTask": "odin: build debug",
+      "preLaunchTask": "odin-build debug",
       "setupCommands": [
         {
           "description": "Enable pretty-printing for gdb",
@@ -43,6 +43,14 @@
           "ignoreFailures": true
         }
       ]
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug Odin LLDB",
+      "program": "${workspaceFolder}/main",
+      "args": [],
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

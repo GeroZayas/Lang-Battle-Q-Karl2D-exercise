@@ -381,7 +381,6 @@ step :: proc() -> bool {
 	}
 
 	update()
-	draw()
 
 	return true
 }
@@ -401,7 +400,9 @@ update :: proc() {
 			screen_state = .Game_Over
 		}
 
-		k2.draw_text(title_text_value, title_pos, title_fs, k2.LIGHT_YELLOW)
+		dt := k2.get_frame_time()
+
+
 
 		if button_text != "" {
 			k2.draw_text(button_text, k2.Vec2{50, 450}, 30, k2.RED)
@@ -443,7 +444,6 @@ update :: proc() {
 			player.dir = .North
 		}
 
-		dt := k2.get_frame_time()
 		to_move := player_movement * dt * PLAYER_VELOCITY
 
 
@@ -572,10 +572,6 @@ update :: proc() {
 	previous_mouse = current_mouse
 }
 
-draw :: proc() {
-
-}
-
 
 shutdown :: proc() {
 
@@ -660,6 +656,9 @@ show_quiz_screen :: proc() {
 	k2.clear(QUIZ_COLOR)
 	k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_RED)
 
+	// log.debug(frame_time)
+
+
 	btn_colliders := make([dynamic]Button, context.temp_allocator)
 
 	// popup simple dentro de la misma ventana
@@ -716,34 +715,31 @@ show_quiz_screen :: proc() {
 		}
 	}
 
-	pressed = current_mouse && !previous_mouse
+	if message_after_selection != "" {
+		show_message_after_selection(message_after_selection)
+	}
 
+	pressed = current_mouse && !previous_mouse
 
 	if pressed {
 		if message_after_selection == "CORRECT" {
 			player.score += 1
-			screen_state = .Game
 		}
 		if message_after_selection == "WRONG" {
 			player.lives -= 1
-			screen_state = .Game
 		}
 
 		question_index = question_index + 1
+		screen_state = .Game
 	}
 
 	if question_index > 3 {
 		question_index = 0
 	}
 
-	if message_after_selection != "" {
-		show_message_after_selection(message_after_selection)
-	}
-
 	show_player_score(player)
 
 	k2.draw_text(current_question, {150, 150}, 40, k2.LIGHT_YELLOW)
-
 	if k2.key_went_down(.Escape) {
 		k2.play_sound(audio_player_hit)
 		screen_state = .Game

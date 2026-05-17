@@ -11,19 +11,10 @@
       }
     },
     {
-      "label": "odin-build",
-      "type": "shell",
-      "command": "odin build . -out:./builds/main",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
-    },
-    {
-      "label": "odin: build debug",
+      "label": "odin-build debug",
       "type": "shell",
       "command": "odin",
-      "args": ["build", ".", "-debug", "-o:none", "-out:./builds/main"],
+      "args": ["build", ".","-debug", "-o:none", "-out:main"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -38,6 +29,6 @@
         "kind": "build",
         "isDefault": true
       }
-    }
+    },
   ]
 }
