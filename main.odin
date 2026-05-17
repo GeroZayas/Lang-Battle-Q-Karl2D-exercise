@@ -742,7 +742,6 @@ show_quiz_screen :: proc() {
 		if message_after_selection == "WRONG" {
 			player.lives -= 1
 		}
-		question_index = question_index + 1
 
 	}
 
@@ -757,6 +756,8 @@ show_quiz_screen :: proc() {
 
 
     if responded == true && response_message_timer <= 0 {
+		question_index = question_index + 1
+        message_after_selection = "" 
         screen_state = .Game
     }
 
