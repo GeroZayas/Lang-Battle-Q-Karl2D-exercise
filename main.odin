@@ -1,3 +1,9 @@
+/*
+TODO:
+- feat: hide already visited and responded `cpq`
+- feat: add another level with new json data quiz
+*/
+
 #+feature dynamic-literals
 
 package Lang_Battle_Q_game
@@ -585,7 +591,6 @@ update :: proc() {
 		}
 		// ------------------------------------------------------------------------
 
-
 	} else if screen_state == .Quiz_Popup {
 		show_quiz_screen()
 
@@ -761,7 +766,6 @@ show_quiz_screen :: proc() {
 
 				if col.text == current_correct_answer {
 					message_after_selection = "CORRECT"
-					// TODO: fix the volumen as it does not seem to be working
 				} else {
 					message_after_selection = "WRONG"
 				}
