@@ -141,7 +141,7 @@ current_question: string
 message: string
 show_answers: bool = false
 
-screen_state := Screen_State.Quiz_Popup
+screen_state := Screen_State.Intro
 
 PLAYER_VELOCITY: f32 = 300
 ENEMY_SPEED: u8 = 5
@@ -184,10 +184,7 @@ audio_player_hit: k2.Audio_Buffer
 audio_intro_music: k2.Audio_Buffer
 audio_quiz_correct: k2.Audio_Buffer
 audio_quiz_wrong: k2.Audio_Buffer
-// enter_quiz_sound: k2.Sound
-// correct_response_sound: k2.Sound
-// wrong_response_sound: k2.Sound
-//
+
 playing_sounds: [dynamic]k2.Sound
 
 // =============================================================================================
@@ -271,22 +268,22 @@ init :: proc() {
 		#load("./resources/textures/you-died-medium-cropped.png"),
 	)
 
-  // ------------------------------------------------------------------------
+	// ------------------------------------------------------------------------
 	// Random position in the world, for when needed
 	random_pos := get_random_pos_in_world(world_dim)
 
 	// ------------------------------------------------------------------------
 	// Textures for Enemies
 	// enemy_sprites_textures = {
-	// 	k2.load_texture_from_bytes(#load("./resources/sprites/C-1.png")),
-	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Cpp-1.png")),
-	// 	k2.load_texture_from_bytes(#load("./resources/sprites/JS-1.png")),
-	// 	k2.load_texture_from_bytes(#load("./resources/sprites/TS-1.png")),
-	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Java-1.png")),
-	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Assembly-1.png")),
-	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Go-1.png")),
-	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Rust-1.png")),
-	// 	k2.load_texture_from_bytes(#load("./resources/sprites/Odin-1.png")),
+	//  k2.load_texture_from_bytes(#load("./resources/sprites/C-1.png")),
+	//  k2.load_texture_from_bytes(#load("./resources/sprites/Cpp-1.png")),
+	//  k2.load_texture_from_bytes(#load("./resources/sprites/JS-1.png")),
+	//  k2.load_texture_from_bytes(#load("./resources/sprites/TS-1.png")),
+	//  k2.load_texture_from_bytes(#load("./resources/sprites/Java-1.png")),
+	//  k2.load_texture_from_bytes(#load("./resources/sprites/Assembly-1.png")),
+	//  k2.load_texture_from_bytes(#load("./resources/sprites/Go-1.png")),
+	//  k2.load_texture_from_bytes(#load("./resources/sprites/Rust-1.png")),
+	//  k2.load_texture_from_bytes(#load("./resources/sprites/Odin-1.png")),
 	// }
 
 	enemy_sprites_textures = {
@@ -294,6 +291,9 @@ init :: proc() {
 	}
 	// ------------------------------------------------------------------------
 
+	/*
+	This is our main enemy now
+	*/
 	odin = {
 		tex          = enemy_sprites_textures["Odin"],
 		name         = "Odin",
@@ -320,7 +320,7 @@ init :: proc() {
 		),
 	)
 
-	log.debug("audio_player_hit",  audio_player_hit)
+	log.debug("audio_player_hit", audio_player_hit)
 	log.debug("audio_quiz_correct", audio_quiz_correct)
 	log.debug("audio_quiz_wrong", audio_quiz_wrong)
 	// audio_intro_music = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
@@ -393,19 +393,14 @@ init :: proc() {
 	)
 
 	// fmt.println(quiz_boxes)
-
-
 }
 
 
 step :: proc() -> bool {
-
 	if !k2.update() {
 		return false
 	}
-
 	update()
-
 	return true
 }
 
@@ -414,26 +409,14 @@ update :: proc() {
 		return
 	}
 
-  for ps_idx := 0; ps_idx < len(playing_sounds); ps_idx += 1 {
-    if !k2.sound_is_playing(playing_sounds[ps_idx]) {
-      k2.destroy_sound(playing_sounds[ps_idx])
-      unordered_remove(&playing_sounds, ps_idx)
-      ps_idx -= 1
-    }
-  }   
+	for ps_idx := 0; ps_idx < len(playing_sounds); ps_idx += 1 {
+		if !k2.sound_is_playing(playing_sounds[ps_idx]) {
+			k2.destroy_sound(playing_sounds[ps_idx])
+			unordered_remove(&playing_sounds, ps_idx)
+			ps_idx -= 1
+		}
+	}
 
-
-  // enter_quiz_sound = k2.create_sound_from_audio_buffer(audio_player_hit)
-  // append(&playing_sounds, enter_quiz_sound)
-	// correct_response_sound = k2.create_sound_from_audio_buffer(audio_quiz_correct)
- //  append(&playing_sounds, correct_response_sound)
-	// wrong_response_sound = k2.create_sound_from_audio_buffer(audio_quiz_wrong)
- //  append(&playing_sounds, wrong_response_sound)
-	//
-  // log.debug(enter_quiz_sound)
-	// log.debug(correct_response_sound)
-	// log.debug(wrong_response_sound)
-	//
 	if screen_state == .Game {
 		k2.clear(CLEAR_COLOR)
 		responded = false
@@ -446,7 +429,6 @@ update :: proc() {
 		}
 
 		dt := k2.get_frame_time()
-
 
 		if button_text != "" {
 			k2.draw_text(button_text, k2.Vec2{50, 450}, 30, k2.RED)
@@ -490,7 +472,6 @@ update :: proc() {
 
 		to_move := player_movement * dt * PLAYER_VELOCITY
 
-
 		for box in quiz_boxes.boxes_array {
 			k2.draw_texture(
 				box.tex,
@@ -527,12 +508,7 @@ update :: proc() {
 		}
 		// ---------------------------------------------------------------------------------------------------
 
-
-		// k2.set_sound_volume(enter_quiz_sound, 0.1)
-		// k2.set_sound_volume(correct_response_sound, 0.1)
-		// k2.set_sound_volume(wrong_response_sound, 0.1)
-
-    for c in colliders {
+		for c in colliders {
 			pc := calc_player_collider(player.pos)
 
 			if UI_DEBUG {
@@ -553,14 +529,13 @@ update :: proc() {
 				sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -2 : 2
 				fix := overlap.w * sign
 				player.pos.x += fix
-        enter_quiz_sound := k2.create_sound_from_audio_buffer(audio_player_hit)
-        k2.set_sound_volume(enter_quiz_sound, 0.1)
+				enter_quiz_sound := k2.create_sound_from_audio_buffer(audio_player_hit)
+				k2.set_sound_volume(enter_quiz_sound, 0.1)
 				k2.play_sound(enter_quiz_sound)
-        append(&playing_sounds, enter_quiz_sound)
+				append(&playing_sounds, enter_quiz_sound)
 				screen_state = .Quiz_Popup
 			}
 			// ------------------------------------------------------------------------
-
 		}
 
 		player.pos.x += to_move.x
@@ -576,10 +551,10 @@ update :: proc() {
 				sign: f32 = pc.y + pc.h / 2 < (c.y + c.h / 2) ? -2 : 2
 				fix := overlap.h * sign
 				player.pos.y += fix
-        enter_quiz_sound := k2.create_sound_from_audio_buffer(audio_player_hit)
-        k2.set_sound_volume(enter_quiz_sound, 0.1)
+				enter_quiz_sound := k2.create_sound_from_audio_buffer(audio_player_hit)
+				k2.set_sound_volume(enter_quiz_sound, 0.1)
 				k2.play_sound(enter_quiz_sound)
-        append(&playing_sounds, enter_quiz_sound)
+				append(&playing_sounds, enter_quiz_sound)
 				screen_state = .Quiz_Popup
 			}
 		}
@@ -618,6 +593,8 @@ update :: proc() {
 		show_intro_screen()
 
 	} else if screen_state == .Game_Over {
+		player.lives = 3
+		player.score = 0
 		game_over_screen()
 	}
 
@@ -630,31 +607,31 @@ update :: proc() {
 shutdown :: proc() {
 
 	// for tex in enemy_sprites_textures {
-	// 	k2.destroy_texture(tex)
+	//  k2.destroy_texture(tex)
 	// }
 
 	// k2.destroy_sound(enter_quiz_sound)
 	// k2.destroy_sound(correct_response_sound)
 	// k2.destroy_sound(wrong_response_sound)
 	//
-  for ps in playing_sounds {
+	for ps in playing_sounds {
 		k2.destroy_sound(ps)
 	}
 
-  delete(playing_sounds)
-  delete(answer_buttons)
-  
-  for name, tex in enemy_sprites_textures {
-    log.debug("-------------------", enemy_sprites_textures[name])
-    k2.destroy_texture(enemy_sprites_textures[name])
-  }
-  delete(enemy_sprites_textures)
-  for box in quiz_boxes.boxes_array {
-			k2.destroy_texture(box.tex)
-  }
-  delete(quiz_boxes.boxes_array)
-  
-  k2.destroy_texture(odin.tex)
+	delete(playing_sounds)
+	delete(answer_buttons)
+
+	for name, tex in enemy_sprites_textures {
+		log.debug("-------------------", enemy_sprites_textures[name])
+		k2.destroy_texture(enemy_sprites_textures[name])
+	}
+	delete(enemy_sprites_textures)
+	for box in quiz_boxes.boxes_array {
+		k2.destroy_texture(box.tex)
+	}
+	delete(quiz_boxes.boxes_array)
+
+	k2.destroy_texture(odin.tex)
 
 	k2.shutdown()
 }
@@ -673,7 +650,7 @@ main :: proc() {
 	shutdown()
 	// ------------------------------------------------------------------------
 
-  log.destroy_console_logger(context.logger)
+	log.destroy_console_logger(context.logger)
 
 	if len(track.allocation_map) > 0 {
 		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
@@ -708,7 +685,6 @@ show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
 	initial_pos: k2.Vec2 = {150, 300}
 	index := 0
 	for res in responses {
-		// rect: k2.Rect = {initial_pos.x, initial_pos.y, 300, 40}
 		foo: k2.Rect = {initial_pos.x, initial_pos.y, 300, 40}
 		button := create_button(foo, res)
 		k2.draw_rect(button.rect, button.color)
@@ -733,9 +709,6 @@ show_quiz_screen :: proc() {
 	k2.clear(QUIZ_COLOR)
 	k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_RED)
 
-	// log.debug(frame_time)
-
-
 	btn_colliders := make([dynamic]Button, context.temp_allocator)
 
 	// popup simple dentro de la misma ventana
@@ -751,9 +724,9 @@ show_quiz_screen :: proc() {
 
 	// OJO
 	q_i = question_index_array[question_index]
-	
+
 	current_question = quiz_doc.all_questions[q_i].question
-	
+
 	current_correct_answer = quiz_doc.all_questions[q_i].correct_answer
 
 	answer_buttons = show_answer_buttons(quiz_doc.all_questions[q_i].answers)
@@ -763,8 +736,6 @@ show_quiz_screen :: proc() {
 	}
 
 	k2.draw_texture(quiz_time_text.tex, {20, 20})
-
-
 	k2.draw_text(
 		"Hit ESC to close",
 		{f32(settings.SCREEN_WIDTH) - 300, f32(settings.SCREEN_HEIGHT) - 50},
@@ -772,28 +743,29 @@ show_quiz_screen :: proc() {
 		k2.YELLOW,
 	)
 
+
+	// === start SOUNDS FOR CORRECT OR INCORRECT ANSWERS SELECTED ===
+	correct_response_sound: k2.Sound
+	wrong_response_sound: k2.Sound
+	// --------------------------------------------------------------
+
 	for col in btn_colliders {
 		mouse_collision = mouse_on_button(col.rect)
 		if mouse_collision {
 			message = current_question
 			k2.draw_circle({col.rect.x + col.rect.w, col.rect.y + col.rect.h / 2}, 10, k2.YELLOW)
+
 			if k2.mouse_button_went_down(.Left) {
 				current_mouse = true
 				responded = true
-				// k2.play_sound(enter_quiz_sound)
+
 				if col.text == current_correct_answer {
-            message_after_selection = "CORRECT"
-            correct_response_sound := k2.create_sound_from_audio_buffer(audio_quiz_correct)
-            k2.set_sound_volume(correct_response_sound, 0.1)
-            k2.play_sound(correct_response_sound)
-            append(&playing_sounds, correct_response_sound)
-          } else {
-            message_after_selection = "WRONG"
-            wrong_response_sound := k2.create_sound_from_audio_buffer(audio_quiz_wrong)
-            k2.set_sound_volume(wrong_response_sound, 0.1)
-            k2.play_sound(wrong_response_sound)
-            append(&playing_sounds, wrong_response_sound)
+					message_after_selection = "CORRECT"
+					// TODO: fix the volumen as it does not seem to be working
+				} else {
+					message_after_selection = "WRONG"
 				}
+
 			} else {
 				current_mouse = false
 			}
@@ -810,9 +782,17 @@ show_quiz_screen :: proc() {
 		show_response_message_timer = true
 		response_message_timer = 1
 		if message_after_selection == "CORRECT" {
+			correct_response_sound = k2.create_sound_from_audio_buffer(audio_quiz_correct)
+			k2.set_sound_volume(correct_response_sound, 0.4)
+			k2.play_sound(correct_response_sound)
+			append(&playing_sounds, correct_response_sound)
 			player.score += 1
 		}
 		if message_after_selection == "WRONG" {
+			wrong_response_sound = k2.create_sound_from_audio_buffer(audio_quiz_wrong)
+			k2.set_sound_volume(wrong_response_sound, 0.4)
+			k2.play_sound(wrong_response_sound)
+			append(&playing_sounds, wrong_response_sound)
 			player.lives -= 1
 		}
 
@@ -832,7 +812,6 @@ show_quiz_screen :: proc() {
 		response_message_timer -= dt
 		show_response_message_timer = false
 	}
-
 
 	if question_index > 3 {
 		question_index = 0
@@ -919,7 +898,12 @@ game_over_screen :: proc() {
 	}
 }
 
+/*
+SHOWS the player Score
 
+**Args**:
+player of type Player
+*/
 show_player_score :: proc(player: Player) {
 	a_rect: k2.Rect = {
 		f32(settings.SCREEN_WIDTH - 320),
