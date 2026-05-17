@@ -161,7 +161,14 @@ world_dim: k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
 
 colliders: [dynamic]k2.Rect
 btn_colliders: [dynamic]Button
+return_to_game_screen_state: bool
+responded := false
 
+// ------------------------------------------------------------------------
+// TIME PRACTICE
+response_message_timer: f32 
+show_response_message_timer: bool
+change_screens : bool
 
 // ------------------------------------------------------------------------
 // TEXTURES FOR INTRO SCREEN
@@ -190,6 +197,9 @@ init :: proc() {
 		"Lang Battle Q!",
 		options = {window_mode = .Windowed_Resizable},
 	)
+
+	change_screens = false
+	show_response_message_timer = false
 	current_level_idx = 0
 
 	data = #load(
@@ -392,6 +402,7 @@ update :: proc() {
 
 	if screen_state == .Game {
 		k2.clear(CLEAR_COLOR)
+        responded = false
 
 		k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_BLUE)
 
@@ -401,7 +412,6 @@ update :: proc() {
 		}
 
 		dt := k2.get_frame_time()
-
 
 
 		if button_text != "" {
@@ -454,7 +464,7 @@ update :: proc() {
 				origin = k2.rect_center(k2.get_texture_rect(box.tex)),
 			)
 			box_rect := k2.rect_from_pos_size(
-				{box.pos[0] - f32(box.tex.width) / 4, box.pos[1] - 5 - f32(box.tex.height) / 4},
+                {box.pos[0] - f32(box.tex.width) / 4, box.pos[1] - 5 - f32(box.tex.height) / 4},
 				{f32(box.tex.width) / 2, f32(box.tex.height) / 2},
 			)
 			if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
@@ -690,6 +700,7 @@ show_quiz_screen :: proc() {
 
 	k2.draw_texture(quiz_time_text.tex, {20, 20})
 
+
 	k2.draw_text(
 		"Hit ESC to close",
 		{f32(settings.SCREEN_WIDTH) - 300, f32(settings.SCREEN_HEIGHT) - 50},
@@ -704,6 +715,7 @@ show_quiz_screen :: proc() {
 			k2.draw_circle({col.rect.x + col.rect.w, col.rect.y + col.rect.h / 2}, 10, k2.YELLOW)
 			if k2.mouse_button_went_down(.Left) {
 				current_mouse = true
+                responded = true
 				if col.text == current_correct_answer {
 					message_after_selection = "CORRECT"
 				} else {
@@ -715,24 +727,46 @@ show_quiz_screen :: proc() {
 		}
 	}
 
-	if message_after_selection != "" {
-		show_message_after_selection(message_after_selection)
-	}
+    pressed = current_mouse && !previous_mouse
 
-	pressed = current_mouse && !previous_mouse
 
-	if pressed {
+	dt := k2.get_frame_time()
+     
+
+    if pressed {
+		show_response_message_timer = true
+        response_message_timer = 2
 		if message_after_selection == "CORRECT" {
 			player.score += 1
 		}
 		if message_after_selection == "WRONG" {
 			player.lives -= 1
 		}
-
 		question_index = question_index + 1
-		screen_state = .Game
+
 	}
 
+    if message_after_selection != "" {
+        show_message_after_selection(message_after_selection)
+	}
+
+
+	if show_response_message_timer == true {
+		log.debug("FISRT foo timer", response_message_timer)
+	}
+
+
+    if responded == true && response_message_timer <= 0 {
+        screen_state = .Game
+    }
+
+    if response_message_timer > 0 {
+		response_message_timer -= dt
+		log.debug("foo timer", response_message_timer)
+		show_response_message_timer = false
+	}
+
+   
 	if question_index > 3 {
 		question_index = 0
 	}
