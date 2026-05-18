@@ -1,10 +1,10 @@
+#+feature dynamic-literals
 /*
-TODO:
+TODO(gero):
 - feat: hide already visited and responded `cpq`
 - feat: add another level with new json data quiz
 */
 
-#+feature dynamic-literals
 
 package Lang_Battle_Q_game
 
@@ -17,7 +17,6 @@ import "core:math/rand"
 import "core:mem"
 import "core:strings"
 import "core:time"
-// import "core:os"
 
 Rect :: k2.Rect
 Vec2 :: k2.Vec2
@@ -156,9 +155,15 @@ game_finished: bool
 
 current_level_idx: int
 
+// ------------------------------------------------------------------------
+// Players and Enemies
+
 player: Player
 
 odin: Enemy
+
+// ------------------------------------------------------------------------
+
 
 quiz_boxes: Quiz_Boxes
 
@@ -196,7 +201,6 @@ playing_sounds: [dynamic]k2.Sound
 // =============================================================================================
 // PROCEDURES
 // =============================================================================================
-
 
 init :: proc() {
 	k2.init(
@@ -401,6 +405,7 @@ init :: proc() {
 	// fmt.println(quiz_boxes)
 }
 
+// =============================================================================================
 
 step :: proc() -> bool {
 	if !k2.update() {
@@ -409,6 +414,8 @@ step :: proc() -> bool {
 	update()
 	return true
 }
+
+// =============================================================================================
 
 update :: proc() {
 	if game_finished {
@@ -608,6 +615,7 @@ update :: proc() {
 	previous_mouse = current_mouse
 }
 
+// =============================================================================================
 
 shutdown :: proc() {
 
@@ -641,6 +649,7 @@ shutdown :: proc() {
 	k2.shutdown()
 }
 
+// =============================================================================================
 
 main :: proc() {
 	track: mem.Tracking_Allocator
@@ -666,6 +675,8 @@ main :: proc() {
 	mem.tracking_allocator_destroy(&track)
 }
 
+// =============================================================================================
+
 ui_debug_options :: proc() {
 	k2.draw_rect({10, 100, 300, 600}, k2.BROWN)
 	text_size: f32 = 40
@@ -686,6 +697,8 @@ ui_debug_options :: proc() {
 
 }
 
+// =============================================================================================
+
 show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
 	initial_pos: k2.Vec2 = {150, 300}
 	index := 0
@@ -705,10 +718,14 @@ show_answer_buttons :: proc(responses: [4]string) -> [dynamic]Button {
 	return answer_buttons
 }
 
+// =============================================================================================
+
 create_button :: proc(rect: k2.Rect, text: string) -> Button {
 	button := Button{rect, text, false, k2.RED}
 	return button
 }
+
+// =============================================================================================
 
 show_quiz_screen :: proc() {
 	k2.clear(QUIZ_COLOR)
@@ -838,6 +855,8 @@ show_quiz_screen :: proc() {
 	}
 }
 
+// =============================================================================================
+
 count_chars_in_question :: proc(question: string) -> int {
 	char_count := 0
 	for char in question {
@@ -845,6 +864,8 @@ count_chars_in_question :: proc(question: string) -> int {
 	}
 	return char_count
 }
+
+// =============================================================================================
 
 show_intro_screen :: proc() {
 	k2.clear(INTRO_COLOR)
@@ -872,6 +893,9 @@ show_intro_screen :: proc() {
 	}
 }
 
+
+// =============================================================================================
+
 get_random_pos_in_world :: proc(world_dimensions: k2.Vec2) -> k2.Vec2 {
 	width := world_dimensions[0]
 	height := world_dimensions[1]
@@ -882,6 +906,8 @@ get_random_pos_in_world :: proc(world_dimensions: k2.Vec2) -> k2.Vec2 {
 
 	return random_pos
 }
+
+// =============================================================================================
 
 game_over_screen :: proc() {
 	k2.clear(k2.BLACK)
@@ -901,6 +927,10 @@ game_over_screen :: proc() {
 		screen_state = .Intro
 	}
 }
+
+
+// =============================================================================================
+
 
 /*
 SHOWS the player Score
@@ -922,6 +952,7 @@ show_player_score :: proc(player: Player) {
 	k2.draw_text(score, {a_rect.x + 5, a_rect.y + 40}, 30, k2.DARK_BLUE)
 }
 
+// =============================================================================================
 
 mouse_on_button :: proc(button_rect: k2.Rect) -> bool {
 	mp := k2.get_mouse_position()
@@ -936,6 +967,7 @@ mouse_on_button :: proc(button_rect: k2.Rect) -> bool {
 	return false
 }
 
+// =============================================================================================
 
 show_message_after_selection :: proc(message: string) {
 	color: k2.Color
