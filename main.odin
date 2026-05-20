@@ -53,12 +53,21 @@ Enemy :: struct {
 	dir:          Direction,
 }
 
+// --------------------------------------
 Quiz_Box :: struct {
 	index:     int,
 	questions: string,
 	tex:       k2.Texture,
 	pos:       k2.Vec2,
+	answered:  bool,
 }
+
+Quiz_Boxes :: struct {
+	boxes_array: [dynamic]Quiz_Box,
+}
+
+current_quiz_box: Quiz_Box
+// --------------------------------------
 
 Game_Title_Texture :: struct {
 	tex: k2.Texture,
@@ -89,10 +98,6 @@ Button :: struct {
 	color:   k2.Color,
 }
 
-Quiz_Boxes :: struct {
-	boxes_array: [dynamic]Quiz_Box,
-}
-
 Direction :: enum {
 	East,
 	West,
@@ -118,23 +123,20 @@ Screen_State :: enum {
 	Game_Over,
 }
 
-answered_questions: [dynamic]string
-
 print :: fmt.println
 
 mouse_collision := false
 
-current_correct_answer: string
 
+current_correct_answer: string
 message_after_selection: string
 
 answer_buttons: [dynamic]Button
-
 question_index_array: [4]string
 question_index: int
 
-data: []u8
-
+data_level_1_python: []u8
+data_level_2_python: []u8
 
 previous_mouse := false
 current_mouse := false
@@ -202,6 +204,10 @@ playing_sounds: [dynamic]k2.Sound
 // PROCEDURES
 // =============================================================================================
 
+
+// =============================================================================================
+// ------------------------------------- INIT ------------------------------------------------
+// =============================================================================================
 init :: proc() {
 	k2.init(
 		settings.SCREEN_WIDTH,
@@ -213,16 +219,30 @@ init :: proc() {
 	show_response_message_timer = false
 	current_level_idx = 0
 
-	data = #load(
-		"/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/quiz/level_1_python.json",
-	)
 
-	unm_err := json.unmarshal(data, &quiz_doc)
-	if unm_err != nil {
-		log.debug(unm_err)
+	// ------------------------------------------------------------------------
+	// LOADING THE JSON WITH THE QUESTIONS AND ANSWERS
+	// ------------------------------------------------------------------------
+	data_level_1_python = #load("./resources/quiz/level_1_python.json")
+	data_level_2_python = #load("./resources/quiz/level_2_python.json")
+	{
+		// level 1
+		unm_err := json.unmarshal(data_level_1_python, &quiz_doc)
+		if unm_err != nil {
+			log.debug(unm_err)
+		}
 	}
-	// fmt.println(quiz_doc)
+
+	// {
+	// 	// level 2
+	// 	unm_err := json.unmarshal(data_level_2_python, &quiz_doc)
+	// 	if unm_err != nil {
+	// 		log.debug(unm_err)
+	// 	}
+	// }
+	fmt.println(quiz_doc)
 	message_after_selection = ""
+	// ------------------------------------------------------------------------
 
 
 	intro = true
@@ -258,8 +278,6 @@ init :: proc() {
 		},
 	}
 
-	// ------------------------------------------------------------------------
-	// LOADING THE JSON WITH THE QUESTIONS AND ANSWERS
 
 	player_tex := k2.load_texture_from_bytes(#load("./resources/sprites/python-small-v2.png"))
 	quiz_box_tex := k2.load_texture_from_bytes(
@@ -314,20 +332,12 @@ init :: proc() {
 
 	// ------------------------------------------------------------------------
 	// AUDIOS and SOUNDS
-	audio_player_hit = k2.load_audio_buffer_from_bytes(
-		#load(
-			"/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/audios/quiz_enter.wav",
-		),
-	)
+	audio_player_hit = k2.load_audio_buffer_from_bytes(#load("./resources/audios/quiz_enter.wav"))
 	audio_quiz_correct = k2.load_audio_buffer_from_bytes(
-		#load(
-			"/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/audios/correct_response.wav",
-		),
+		#load("./resources/audios/correct_response.wav"),
 	)
 	audio_quiz_wrong = k2.load_audio_buffer_from_bytes(
-		#load(
-			"/home/gero/Downloads/Coding/Odin_Programs/lang_battle_q_game_karl2d/resources/audios/wrong_response.wav",
-		),
+		#load("./resources/audios/wrong_response.wav"),
 	)
 
 	log.debug("audio_player_hit", audio_player_hit)
@@ -381,24 +391,28 @@ init :: proc() {
 			questions = "Q1",
 			tex = quiz_box_tex,
 			pos = rand_position_set.positions[0],
+			answered = false,
 		},
 		Quiz_Box {
-			index = 2,
+			index = 1,
 			questions = "Q2",
 			tex = quiz_box_tex,
 			pos = rand_position_set.positions[1],
+			answered = false,
 		},
 		Quiz_Box {
-			index = 3,
+			index = 2,
 			questions = "Q3",
 			tex = quiz_box_tex,
 			pos = rand_position_set.positions[2],
+			answered = false,
 		},
 		Quiz_Box {
-			index = 4,
+			index = 3,
 			questions = "Q4",
 			tex = quiz_box_tex,
 			pos = rand_position_set.positions[3],
+			answered = false,
 		},
 	)
 
@@ -415,6 +429,8 @@ step :: proc() -> bool {
 	return true
 }
 
+// =============================================================================================
+// ------------------------------------- UPDATE ------------------------------------------------
 // =============================================================================================
 
 update :: proc() {
@@ -486,17 +502,23 @@ update :: proc() {
 		to_move := player_movement * dt * PLAYER_VELOCITY
 
 		for box in quiz_boxes.boxes_array {
-			k2.draw_texture(
-				box.tex,
-				box.pos,
-				origin = k2.rect_center(k2.get_texture_rect(box.tex)),
-			)
-			box_rect := k2.rect_from_pos_size(
-				{box.pos[0] - f32(box.tex.width) / 4, box.pos[1] - 5 - f32(box.tex.height) / 4},
-				{f32(box.tex.width) / 2, f32(box.tex.height) / 2},
-			)
-			if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
-			append(&colliders, box_rect)
+			if box.answered == false {
+				k2.draw_texture(
+					box.tex,
+					box.pos,
+					origin = k2.rect_center(k2.get_texture_rect(box.tex)),
+				)
+				box_rect := k2.rect_from_pos_size(
+					{
+						box.pos[0] - f32(box.tex.width) / 4,
+						box.pos[1] - 5 - f32(box.tex.height) / 4,
+					},
+					{f32(box.tex.width) / 2, f32(box.tex.height) / 2},
+				)
+
+				if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
+				append(&colliders, box_rect)
+			}
 		}
 
 		// -------------------------------- PLAYER -------------------------------------------------------------
@@ -649,6 +671,8 @@ shutdown :: proc() {
 	k2.shutdown()
 }
 
+// =============================================================================================
+// ------------------------------------- MAIN --------------------------------------------------
 // =============================================================================================
 
 main :: proc() {
@@ -826,6 +850,7 @@ show_quiz_screen :: proc() {
 	if responded == true && response_message_timer <= 0 {
 		question_index = question_index + 1
 		message_after_selection = ""
+		// BOOK
 		screen_state = .Game
 	}
 
