@@ -1,6 +1,6 @@
 // #+feature dynamic-literals
 
-// package scratch_buffer
+package scratch_buffer
 
 // import k2 "../../karl2d"
 // import "core:encoding/json"

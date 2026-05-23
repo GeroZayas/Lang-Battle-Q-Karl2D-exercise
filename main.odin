@@ -5,7 +5,6 @@ TODO(gero):
 - feat: add another level with new json data quiz
 */
 
-
 package Lang_Battle_Q_game
 
 import k2 "../karl2d"
@@ -27,6 +26,7 @@ INTRO_COLOR: k2.Color = {1, 32, 46, 250}
 QUIZ_COLOR: k2.Color = {46, 20, 1, 250}
 settings := Settings{1024, 900}
 
+
 title_text_value := "Go to the CPQs and Answer the Questions before getting caught!"
 title_pos: k2.Vec2 = {50, 10}
 title_fs: f32 = 20
@@ -35,8 +35,6 @@ text_pos: k2.Vec2 = {50, 150}
 text_fs: f32 = 50
 
 button_text := ""
-
-enemy_sprites_textures: map[string]k2.Texture
 
 UI_DEBUG := false
 
@@ -66,7 +64,8 @@ Quiz_Boxes :: struct {
 	boxes_array: [dynamic]Quiz_Box,
 }
 
-current_quiz_box: Quiz_Box
+quiz_boxes: Quiz_Boxes
+current_quiz_box: ^Quiz_Box
 // --------------------------------------
 
 Game_Title_Texture :: struct {
@@ -123,11 +122,16 @@ Screen_State :: enum {
 	Game_Over,
 }
 
+RectId :: struct {
+	rect: k2.Rect,
+	id:   int,
+}
+
+// ---------------
 print :: fmt.println
+// ---------------
 
 mouse_collision := false
-
-
 current_correct_answer: string
 message_after_selection: string
 
@@ -167,13 +171,11 @@ odin: Enemy
 // ------------------------------------------------------------------------
 
 
-quiz_boxes: Quiz_Boxes
-
 intro: bool
 
 world_dim: k2.Vec2 = {f32(settings.SCREEN_WIDTH), f32(settings.SCREEN_HEIGHT)}
 
-colliders: [dynamic]k2.Rect
+colliders: [dynamic]RectId
 btn_colliders: [dynamic]Button
 return_to_game_screen_state: bool
 responded := false
@@ -197,8 +199,10 @@ audio_player_hit: k2.Audio_Buffer
 audio_intro_music: k2.Audio_Buffer
 audio_quiz_correct: k2.Audio_Buffer
 audio_quiz_wrong: k2.Audio_Buffer
-
 playing_sounds: [dynamic]k2.Sound
+// === start SOUNDS FOR CORRECT OR INCORRECT ANSWERS SELECTED ===
+correct_response_sound: k2.Sound
+wrong_response_sound: k2.Sound
 
 // =============================================================================================
 // PROCEDURES
@@ -227,7 +231,7 @@ init :: proc() {
 	data_level_2_python = #load("./resources/quiz/level_2_python.json")
 	{
 		// level 1
-		unm_err := json.unmarshal(data_level_1_python, &quiz_doc)
+		unm_err := json.unmarshal(data_level_1_python, &quiz_doc, allocator = arena_alloc)
 		if unm_err != nil {
 			log.debug(unm_err)
 		}
@@ -244,9 +248,7 @@ init :: proc() {
 	message_after_selection = ""
 	// ------------------------------------------------------------------------
 
-
 	intro = true
-	colliders = make([dynamic]k2.Rect, context.temp_allocator)
 
 	screen_w := f32(settings.SCREEN_WIDTH)
 	screen_h := f32(settings.SCREEN_HEIGHT)
@@ -301,29 +303,14 @@ init :: proc() {
 	random_pos := get_random_pos_in_world(world_dim)
 
 	// ------------------------------------------------------------------------
-	// Textures for Enemies
-	// enemy_sprites_textures = {
-	//  k2.load_texture_from_bytes(#load("./resources/sprites/C-1.png")),
-	//  k2.load_texture_from_bytes(#load("./resources/sprites/Cpp-1.png")),
-	//  k2.load_texture_from_bytes(#load("./resources/sprites/JS-1.png")),
-	//  k2.load_texture_from_bytes(#load("./resources/sprites/TS-1.png")),
-	//  k2.load_texture_from_bytes(#load("./resources/sprites/Java-1.png")),
-	//  k2.load_texture_from_bytes(#load("./resources/sprites/Assembly-1.png")),
-	//  k2.load_texture_from_bytes(#load("./resources/sprites/Go-1.png")),
-	//  k2.load_texture_from_bytes(#load("./resources/sprites/Rust-1.png")),
-	//  k2.load_texture_from_bytes(#load("./resources/sprites/Odin-1.png")),
-	// }
 
-	enemy_sprites_textures = {
-		"Odin" = k2.load_texture_from_bytes(#load("./resources/sprites/odin-small-v1.png")),
-	}
 	// ------------------------------------------------------------------------
 
 	/*
 	This is our main enemy now
 	*/
 	odin = {
-		tex          = enemy_sprites_textures["Odin"],
+		tex          = k2.load_texture_from_bytes(#load("./resources/sprites/odin-small-v1.png")),
 		name         = "Odin",
 		unique_power = "Hellope Power",
 		pos          = get_random_pos_in_world(world_dim),
@@ -434,6 +421,8 @@ step :: proc() -> bool {
 // =============================================================================================
 
 update :: proc() {
+	colliders = make([dynamic]RectId, context.temp_allocator)
+
 	if game_finished {
 		return
 	}
@@ -447,6 +436,8 @@ update :: proc() {
 	}
 
 	if screen_state == .Game {
+		clear(&colliders)
+
 		k2.clear(CLEAR_COLOR)
 		responded = false
 
@@ -515,9 +506,10 @@ update :: proc() {
 					},
 					{f32(box.tex.width) / 2, f32(box.tex.height) / 2},
 				)
+				rect_id := RectId{box_rect, box.index}
 
 				if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
-				append(&colliders, box_rect)
+				append(&colliders, rect_id)
 			}
 		}
 
@@ -535,14 +527,16 @@ update :: proc() {
 		k2.draw_texture(
 			odin.tex,
 			odin.pos,
-			origin = k2.rect_bottom_middle(k2.get_texture_rect(player.tex)),
+			origin = k2.rect_bottom_middle(k2.get_texture_rect(odin.tex)),
 		)
 		// OTHER
 		{
-
 		}
-		// ---------------------------------------------------------------------------------------------------
 
+		// ---------------------------------------------------------------------------------------------------
+		// Checking if PLAYER comes in contact with any of the CPQs (Quiz Boxes) to trigger
+		// the opening of the Quiz Screen:
+		// ---------------------------------------------------------------------------------------------------
 		for c in colliders {
 			pc := calc_player_collider(player.pos)
 
@@ -555,13 +549,25 @@ update :: proc() {
 				)
 			}
 
-			overlap, overlapping := k2.rect_overlap(pc, c)
+			overlap, overlapping := k2.rect_overlap(pc, c.rect)
 
 			// ------------------------------------------------------------------------
 			// --> COLLISION with QUIZ BOX <--
 			// ------------------------------------------------------------------------
+			// Bookmark ***a
 			if overlapping && overlap.w != 0 {
-				sign: f32 = pc.x + pc.w / 2 < (c.x + c.w / 2) ? -2 : 2
+
+
+				print("-----------------------------------")
+				for box in quiz_boxes.boxes_array {
+					if box.index == c.id {
+						print("WE FOUND IT BITCH:", box)
+						print("Collider:", c)
+					}
+				}
+				print("-----------------------------------")
+
+				sign: f32 = pc.x + pc.w / 2 < (c.rect.x + c.rect.w / 2) ? -2 : 2
 				fix := overlap.w * sign
 				player.pos.x += fix
 				enter_quiz_sound := k2.create_sound_from_audio_buffer(audio_player_hit)
@@ -577,13 +583,24 @@ update :: proc() {
 
 		for c in colliders {
 			pc := calc_player_collider(player.pos)
-			overlap, overlapping := k2.rect_overlap(pc, c)
+			overlap, overlapping := k2.rect_overlap(pc, c.rect)
 
 			// ------------------------------------------------------------------------
 			// --> COLLISION with QUIZ BOX <--
 			// ------------------------------------------------------------------------
+			// Bookmark ***b
 			if overlapping && overlap.h != 0 {
-				sign: f32 = pc.y + pc.h / 2 < (c.y + c.h / 2) ? -2 : 2
+
+
+				for &box in quiz_boxes.boxes_array {
+					if box.index == c.id {
+						current_quiz_box = &box
+						print("current_quiz_box = box", box)
+					}
+				}
+
+
+				sign: f32 = pc.y + pc.h / 2 < (c.rect.y + c.rect.h / 2) ? -2 : 2
 				fix := overlap.h * sign
 				player.pos.y += fix
 				enter_quiz_sound := k2.create_sound_from_audio_buffer(audio_player_hit)
@@ -641,32 +658,33 @@ update :: proc() {
 
 shutdown :: proc() {
 
-	// for tex in enemy_sprites_textures {
-	//  k2.destroy_texture(tex)
-	// }
-
-	// k2.destroy_sound(enter_quiz_sound)
-	// k2.destroy_sound(correct_response_sound)
-	// k2.destroy_sound(wrong_response_sound)
-	//
-	for ps in playing_sounds {
-		k2.destroy_sound(ps)
+	for quiz_box in quiz_boxes.boxes_array {
+		k2.destroy_texture(quiz_box.tex)
 	}
 
-	delete(playing_sounds)
-	delete(answer_buttons)
-
-	for name, tex in enemy_sprites_textures {
-		log.debug("-------------------", enemy_sprites_textures[name])
-		k2.destroy_texture(enemy_sprites_textures[name])
-	}
-	delete(enemy_sprites_textures)
-	for box in quiz_boxes.boxes_array {
-		k2.destroy_texture(box.tex)
-	}
+	clear(&colliders)
+	clear(&btn_colliders)
+	clear(&quiz_boxes.boxes_array)
+	clear(&answer_buttons)
+	clear(&playing_sounds)
+	delete(colliders)
+	delete(btn_colliders)
 	delete(quiz_boxes.boxes_array)
+	delete(answer_buttons)
+	delete(playing_sounds)
 
 	k2.destroy_texture(odin.tex)
+	k2.destroy_texture(player.tex)
+	k2.destroy_texture(intro_title_game.tex)
+	k2.destroy_texture(background_intro.tex)
+	k2.destroy_texture(quiz_time_text.tex)
+	k2.destroy_texture(you_died_text.tex)
+
+	k2.destroy_audio_buffer(audio_player_hit)
+	k2.destroy_audio_buffer(audio_intro_music)
+	k2.destroy_audio_buffer(audio_quiz_correct)
+	k2.destroy_audio_buffer(audio_quiz_wrong)
+
 
 	k2.shutdown()
 }
@@ -674,6 +692,8 @@ shutdown :: proc() {
 // =============================================================================================
 // ------------------------------------- MAIN --------------------------------------------------
 // =============================================================================================
+arena: mem.Arena
+arena_alloc: mem.Allocator
 
 main :: proc() {
 	track: mem.Tracking_Allocator
@@ -681,14 +701,20 @@ main :: proc() {
 	context.allocator = mem.tracking_allocator(&track)
 
 	context.logger = log.create_console_logger()
+	buffer: [1024 * 100]u8
+	mem.arena_init(&arena, buffer[:])
+	arena_alloc = mem.arena_allocator(&arena)
+
 	// ------------------------------------------------------------------------
-	// THE MAIN LOOP
+	// THE MAIN LOOP|
 	init()
 	for step() {}
 	shutdown()
 	// ------------------------------------------------------------------------
 
 	log.destroy_console_logger(context.logger)
+
+	mem.arena_free_all(&arena)
 
 	if len(track.allocation_map) > 0 {
 		fmt.eprintf("=== %v allocations not freed: ===\n", len(track.allocation_map))
@@ -752,6 +778,8 @@ create_button :: proc(rect: k2.Rect, text: string) -> Button {
 // =============================================================================================
 
 show_quiz_screen :: proc() {
+	clear(&answer_buttons)
+
 	k2.clear(QUIZ_COLOR)
 	k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_RED)
 
@@ -789,10 +817,6 @@ show_quiz_screen :: proc() {
 		k2.YELLOW,
 	)
 
-
-	// === start SOUNDS FOR CORRECT OR INCORRECT ANSWERS SELECTED ===
-	correct_response_sound: k2.Sound
-	wrong_response_sound: k2.Sound
 	// --------------------------------------------------------------
 
 	for col in btn_colliders {
@@ -819,11 +843,10 @@ show_quiz_screen :: proc() {
 
 	pressed = current_mouse && !previous_mouse
 
-
 	dt := k2.get_frame_time()
 
-
 	if pressed {
+		current_quiz_box.answered = true // Bookmark ***c
 		show_response_message_timer = true
 		response_message_timer = 1
 		if message_after_selection == "CORRECT" {
@@ -852,7 +875,7 @@ show_quiz_screen :: proc() {
 		message_after_selection = ""
 		// BOOK
 		screen_state = .Game
-	}
+	} 
 
 	if response_message_timer > 0 {
 		response_message_timer -= dt
