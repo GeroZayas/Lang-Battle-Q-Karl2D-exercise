@@ -1,0 +1,37 @@
+{
+  "level": 1,
+  "language": "Python",
+  "all_questions": {
+    "1": {
+      "type": "multiple_options",
+      "question": "When was Python created?",
+      "answers": ["1999", "1989", "1991", "1995"],
+      "correct_answer": "1991"
+    },
+    "2": {
+      "type": "multiple_options",
+      "question": "Who created Python?",
+      "answers": [
+        "Brendan Eich",
+        "Guido Van Rossum",
+        "Rob Pike",
+        "Andrew Kelly"
+      ],
+      "correct_answer": "Guido Van Rossum"
+    },
+    "3": {
+      "type": "multiple_options",
+      "question": "Which symbol is used to start a comment in Python?",
+      "answers": ["//", "#", "--", "/*"],
+      "correct_answer": "#"
+    },
+    "4": {
+      "type": "multiple_options",
+      "question": "Which function prints text to the console in Python?",
+      "answers": ["echo()", "console.log()", "print()", "write()"],
+      "correct_answer": "print()"
+    }
+  }
+}
+
+
