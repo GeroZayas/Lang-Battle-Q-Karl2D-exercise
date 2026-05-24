@@ -8,6 +8,7 @@ TODO(gero):
 package Lang_Battle_Q_game
 
 import k2 "../karl2d"
+import "base:runtime"
 import "core:encoding/json"
 import "core:fmt"
 import "core:log"
@@ -51,13 +52,18 @@ Enemy :: struct {
 	dir:          Direction,
 }
 
+QuizBoxState :: enum {
+	ANSWERED,
+	NOT_ANSWERED,
+}
+
 // --------------------------------------
 Quiz_Box :: struct {
 	index:     int,
 	questions: string,
 	tex:       k2.Texture,
 	pos:       k2.Vec2,
-	answered:  bool,
+	answered:  QuizBoxState,
 }
 
 Quiz_Boxes :: struct {
@@ -223,7 +229,6 @@ init :: proc() {
 	show_response_message_timer = false
 	current_level_idx = 0
 
-
 	// ------------------------------------------------------------------------
 	// LOADING THE JSON WITH THE QUESTIONS AND ANSWERS
 	// ------------------------------------------------------------------------
@@ -233,7 +238,7 @@ init :: proc() {
 		// level 1
 		unm_err := json.unmarshal(data_level_1_python, &quiz_doc, allocator = arena_alloc)
 		if unm_err != nil {
-			log.debug(unm_err)
+			log.error(unm_err)
 		}
 	}
 
@@ -244,7 +249,7 @@ init :: proc() {
 	// 		log.debug(unm_err)
 	// 	}
 	// }
-	fmt.println(quiz_doc)
+
 	message_after_selection = ""
 	// ------------------------------------------------------------------------
 
@@ -378,28 +383,28 @@ init :: proc() {
 			questions = "Q1",
 			tex = quiz_box_tex,
 			pos = rand_position_set.positions[0],
-			answered = false,
+			answered = .NOT_ANSWERED,
 		},
 		Quiz_Box {
 			index = 1,
 			questions = "Q2",
 			tex = quiz_box_tex,
 			pos = rand_position_set.positions[1],
-			answered = false,
+			answered = .NOT_ANSWERED,
 		},
 		Quiz_Box {
 			index = 2,
 			questions = "Q3",
 			tex = quiz_box_tex,
 			pos = rand_position_set.positions[2],
-			answered = false,
+			answered = .NOT_ANSWERED,
 		},
 		Quiz_Box {
 			index = 3,
 			questions = "Q4",
 			tex = quiz_box_tex,
 			pos = rand_position_set.positions[3],
-			answered = false,
+			answered = .NOT_ANSWERED,
 		},
 	)
 
@@ -493,7 +498,8 @@ update :: proc() {
 		to_move := player_movement * dt * PLAYER_VELOCITY
 
 		for box in quiz_boxes.boxes_array {
-			if box.answered == false {
+			// Bookmark ***c
+			if box.answered == .NOT_ANSWERED {
 				k2.draw_texture(
 					box.tex,
 					box.pos,
@@ -511,6 +517,7 @@ update :: proc() {
 				if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
 				append(&colliders, rect_id)
 			}
+
 		}
 
 		// -------------------------------- PLAYER -------------------------------------------------------------
@@ -556,16 +563,13 @@ update :: proc() {
 			// ------------------------------------------------------------------------
 			// Bookmark ***a
 			if overlapping && overlap.w != 0 {
-
-
 				print("-----------------------------------")
-				for box in quiz_boxes.boxes_array {
+				for &box in quiz_boxes.boxes_array {
 					if box.index == c.id {
-						print("WE FOUND IT BITCH:", box)
-						print("Collider:", c)
+						current_quiz_box = &box
+						print("current_quiz_box = box", box)
 					}
 				}
-				print("-----------------------------------")
 
 				sign: f32 = pc.x + pc.w / 2 < (c.rect.x + c.rect.w / 2) ? -2 : 2
 				fix := overlap.w * sign
@@ -590,8 +594,7 @@ update :: proc() {
 			// ------------------------------------------------------------------------
 			// Bookmark ***b
 			if overlapping && overlap.h != 0 {
-
-
+				print("-----------------------------------")
 				for &box in quiz_boxes.boxes_array {
 					if box.index == c.id {
 						current_quiz_box = &box
@@ -846,7 +849,6 @@ show_quiz_screen :: proc() {
 	dt := k2.get_frame_time()
 
 	if pressed {
-		current_quiz_box.answered = true // Bookmark ***c
 		show_response_message_timer = true
 		response_message_timer = 1
 		if message_after_selection == "CORRECT" {
@@ -871,11 +873,17 @@ show_quiz_screen :: proc() {
 	}
 
 	if responded == true && response_message_timer <= 0 {
+		/*This guys is a reference to tyhe currently selected
+		quiz box element, GPQ, so, when responded, we change to the enum state of 
+		answered to NOT render it anymore, as we wanmt it to disappear*/
+		// ---------------------------------------------s
+		current_quiz_box^.answered = .ANSWERED
+		// ---------------------------------------------
 		question_index = question_index + 1
 		message_after_selection = ""
 		// BOOK
 		screen_state = .Game
-	} 
+	}
 
 	if response_message_timer > 0 {
 		response_message_timer -= dt

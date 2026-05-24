@@ -1,18 +1,24 @@
-#+build windows
-#+vet explicit-allocators
-#+private file
-
-
 package scratch_buffer
 
 import "core:fmt"
 import "core:log"
 
-CONSTANT :: foo_constant { 
-    name = prefix_name,
-    job = prefix_job,
+
+print :: fmt.println
+names := [4]string{"Gero", "Mar", "Silvia", "Manel"}
+
+State :: enum {
+    FOUND,
+    NOT_FOUND
 }
 
 main :: proc(){
+    name := "Gero"
+    for n in names {
+        if name == n {
+            print(State.FOUND)
+            print(n)
+        }
+    }
 
 }
