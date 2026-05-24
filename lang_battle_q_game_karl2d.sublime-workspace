@@ -150,10 +150,6 @@
 		"side_bar_visible": false,
 		"status_bar_visible": false
 	},
-	"expanded_folders":
-	[
-		"/C/Users/Gero/Documents/Gero_Coding/Odin/Lang-Battle-Q-Karl2D-exercise"
-	],
 	"file_history":
 	[
 		"/C/Users/Gero/Documents/Gero_Coding/Odin/Lang-Battle-Q-Karl2D-exercise/debug_utils.odin",
@@ -245,6 +241,20 @@
 		]
 	},
 	"menu_visible": true,
+	"output.LSP Log Panel":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"output.diagnostics":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
 	"output.find_results":
 	{
 		"height": 0.0,

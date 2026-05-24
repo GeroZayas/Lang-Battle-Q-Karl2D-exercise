@@ -1,7 +1,7 @@
 .PHONY: run build alias test
 
 run:
-	./lang_battle_q_game_karl2d
+	./src/lang_battle_q_game_karl2d
 
 scratch-buffer: 
 	odin run scratch_buffer
