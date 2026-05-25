@@ -158,12 +158,20 @@ question_index: int
 
 data_level_1_python: []u8
 data_level_2_python: []u8
+data_level_3_python: []u8
 
 previous_mouse := false
 current_mouse := false
 pressed := false
 
-quiz_doc: QuizDoc
+// QUIZ DOCS
+// Bookmark ***
+quiz_doc_level_1: QuizDoc
+quiz_doc_level_2: QuizDoc
+quiz_doc_level_3: QuizDoc
+current_quiz_doc: QuizDoc
+
+
 q_i: string
 current_question: string
 message: string
@@ -246,21 +254,30 @@ init :: proc() {
 	// ------------------------------------------------------------------------
 	data_level_1_python = #load("./resources/quiz/level_1_python.json")
 	data_level_2_python = #load("./resources/quiz/level_2_python.json")
+	data_level_3_python = #load("./resources/quiz/level_3_python.json")
 	{
 		// level 1
-		unm_err := json.unmarshal(data_level_1_python, &quiz_doc, allocator = arena_alloc)
+		unm_err := json.unmarshal(data_level_1_python, &quiz_doc_level_1, allocator = arena_alloc)
 		if unm_err != nil {
 			log.error(unm_err)
 		}
 	}
 
-	// {
-	// 	// level 2
-	// 	unm_err := json.unmarshal(data_level_2_python, &quiz_doc)
-	// 	if unm_err != nil {
-	// 		log.debug(unm_err)
-	// 	}
-	// }
+	{
+		// level 2
+		unm_err := json.unmarshal(data_level_2_python, &quiz_doc_level_2)
+		if unm_err != nil {
+			log.debug(unm_err)
+		}
+	}
+
+	{
+		// level 3
+		unm_err := json.unmarshal(data_level_3_python, &quiz_doc_level_3)
+		if unm_err != nil {
+			log.debug(unm_err)
+		}
+	}
 
 	message_after_selection = ""
 	// ------------------------------------------------------------------------
@@ -346,10 +363,6 @@ init :: proc() {
 		#load("./resources/audios/wrong_response.wav"),
 	)
 
-	log.debug("audio_player_hit", audio_player_hit)
-	log.debug("audio_quiz_correct", audio_quiz_correct)
-	log.debug("audio_quiz_wrong", audio_quiz_wrong)
-	// audio_intro_music = k2.load_audio_buffer_from_bytes(#load("laser_shoot.wav"))
 	// ------------------------------------------------------------------------
 	// Our MAIN PLAYER
 	player = {
@@ -472,11 +485,9 @@ update :: proc() {
 		k2.clear(CLEAR_COLOR)
 		responded = false
 
-
 		k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_BLUE)
 
 		show_score_board()
-
 
 		if player.lives == 0 {
 			time.sleep(1 * time.Second)
@@ -528,7 +539,6 @@ update :: proc() {
 		to_move := player_movement * dt * PLAYER_VELOCITY
 
 		for box in quiz_boxes.boxes_array {
-			// Bookmark ***c
 			if box.answered == .NOT_ANSWERED {
 				k2.draw_texture(
 					box.tex,
@@ -591,7 +601,6 @@ update :: proc() {
 			// ------------------------------------------------------------------------
 			// --> COLLISION with QUIZ BOX <--
 			// ------------------------------------------------------------------------
-			// Bookmark ***a
 			if overlapping && overlap.w != 0 {
 				print("-----------------------------------")
 				for &box in quiz_boxes.boxes_array {
@@ -622,7 +631,6 @@ update :: proc() {
 			// ------------------------------------------------------------------------
 			// --> COLLISION with QUIZ BOX <--
 			// ------------------------------------------------------------------------
-			// Bookmark ***b
 			if overlapping && overlap.h != 0 {
 				print("-----------------------------------")
 				for &box in quiz_boxes.boxes_array {
@@ -824,11 +832,30 @@ show_quiz_screen :: proc() {
 	// OJO
 	q_i = question_index_array[question_index]
 
-	current_question = quiz_doc.all_questions[q_i].question
+	// Bookmark ***
 
-	current_correct_answer = quiz_doc.all_questions[q_i].correct_answer
+	switch current_level {
+		case 1:
+		current_quiz_doc = quiz_doc_level_1
+		case 2:
+		current_quiz_doc = quiz_doc_level_2
+		case 3:
+		current_quiz_doc = quiz_doc_level_3
+		case:
+		print("SELECT Correct Quiz Doc for level")
+	}
 
-	answer_buttons = show_answer_buttons(quiz_doc.all_questions[q_i].answers)
+	// current_question = quiz_doc_level_1.all_questions[q_i].question
+
+	// current_correct_answer = quiz_doc_level_1.all_questions[q_i].correct_answer
+
+	// answer_buttons = show_answer_buttons(quiz_doc_level_1.all_questions[q_i].answers)
+
+	current_question = current_quiz_doc.all_questions[q_i].question
+
+	current_correct_answer = current_quiz_doc.all_questions[q_i].correct_answer
+
+	answer_buttons = show_answer_buttons(current_quiz_doc.all_questions[q_i].answers)
 
 	for answer_btn in answer_buttons {
 		append(&btn_colliders, answer_btn)

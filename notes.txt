@@ -3,12 +3,9 @@ NOTES:
 
 ...
 FEAT: Level Up
-	-> loading the neext json file of level 2 python
+	-> loading the next json file of level 2 python
 	-> add another Enemy
 	-> increase speed of enemies and of player
-...
-
-FEAT: Add Score Board to Game Screen
 ...
 
 FEAT: Music streaming all the time (optionally turn off)
