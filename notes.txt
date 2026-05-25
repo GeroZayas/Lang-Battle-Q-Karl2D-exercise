@@ -1,6 +1,7 @@
 NOTES:
 ------
 
+...
 FEAT: Level Up
 	-> loading the neext json file of level 2 python
 	-> add another Enemy
@@ -18,4 +19,4 @@ FEAT: Options / Settings Screen
 	-> overall volume of sound effects
 
 ...
-
+FEAT: Player -> small animation -> when it moves it leaves behind like smoke or dust or similar

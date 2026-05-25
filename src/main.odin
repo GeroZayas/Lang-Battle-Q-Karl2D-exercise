@@ -15,7 +15,6 @@ import "core:log"
 import "core:math/linalg"
 import "core:math/rand"
 import "core:mem"
-import "core:strings"
 import "core:time"
 
 Rect :: k2.Rect
@@ -204,11 +203,14 @@ show_response_message_timer: bool
 change_screens: bool
 
 // ------------------------------------------------------------------------
-// TEXTURES FOR INTRO SCREEN
+// TEXTURES FOR SCREENS
 intro_title_game: Game_Title_Texture
 background_intro: Background_Texture
 quiz_time_text: Background_Texture
 you_died_text: Background_Texture
+
+// MORE TEXTURES
+score_board_tex: k2.Texture
 
 // ------------------------------------------------------------------------
 // AUDIOS
@@ -312,6 +314,8 @@ init :: proc() {
 	game_over_text_tex := k2.load_texture_from_bytes(
 		#load("./resources/textures/you-died-medium-cropped.png"),
 	)
+
+	score_board_tex = k2.load_texture_from_bytes(#load("./resources/textures/scoreboard_1_big.png"))
 
 	// ------------------------------------------------------------------------
 	// Random position in the world, for when needed
@@ -460,8 +464,6 @@ update :: proc() {
 			ps_idx -= 1
 		}
 	}
-
-
 
 	if screen_state == .Game {
 
@@ -816,20 +818,9 @@ show_quiz_screen :: proc() {
 	k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_RED)
 
 	show_score_board()
-	
 
+	// To check when we are hovering/clicking a button
 	btn_colliders := make([dynamic]Button, context.temp_allocator)
-
-	// popup simple dentro de la misma ventana
-	k2.draw_rect(
-		{
-			f32(settings.SCREEN_WIDTH) * 0.10,
-			f32(settings.SCREEN_HEIGHT) * 0.10,
-			f32(settings.SCREEN_WIDTH) * 0.80,
-			f32(settings.SCREEN_HEIGHT) * 0.80,
-		},
-		k2.DARK_RED,
-	)
 
 	// OJO
 	q_i = question_index_array[question_index]
@@ -844,7 +835,7 @@ show_quiz_screen :: proc() {
 		append(&btn_colliders, answer_btn)
 	}
 
-	k2.draw_texture(quiz_time_text.tex, {20, 20})
+	k2.draw_texture(quiz_time_text.tex, {f32(settings.SCREEN_WIDTH)/2 - f32(quiz_time_text.tex.width)/2, 40})
 	k2.draw_text(
 		"Hit ESC to close",
 		{f32(settings.SCREEN_WIDTH) - 300, f32(settings.SCREEN_HEIGHT) - 50},
@@ -858,7 +849,7 @@ show_quiz_screen :: proc() {
 		mouse_collision = mouse_on_button(col.rect)
 		if mouse_collision {
 			message = current_question
-			k2.draw_circle({col.rect.x + col.rect.w, col.rect.y + col.rect.h / 2}, 10, k2.YELLOW)
+			k2.draw_circle({col.rect.x + col.rect.w, col.rect.y + col.rect.h / 2}, 8, k2.YELLOW)
 
 			if k2.mouse_button_went_down(.Left) {
 				current_mouse = true
@@ -926,8 +917,6 @@ show_quiz_screen :: proc() {
 		question_index = 0
 	}
 
-	// show_player_score(player)
-
 	question_font_size: f32
 
 	count_chars := count_chars_in_question(current_question)
@@ -937,7 +926,7 @@ show_quiz_screen :: proc() {
 		question_font_size = 30
 	}
 
-	k2.draw_text(current_question, {150, 150}, question_font_size, k2.LIGHT_YELLOW)
+	k2.draw_text(current_question, {150, 200}, question_font_size, k2.LIGHT_YELLOW)
 	if k2.key_went_down(.Escape) {
 		screen_state = .Game
 	}
@@ -1018,36 +1007,24 @@ game_over_screen :: proc() {
 
 
 // =============================================================================================
-
-
-/*
-SHOWS the player Score
-
-**Args**:
-player of type Player
-*/
-show_player_score :: proc(player: Player) {
-	a_rect: k2.Rect = {
-		f32(settings.SCREEN_WIDTH - 320),
-		f32(settings.SCREEN_HEIGHT - 200),
-		200,
-		100,
-	}
-	k2.draw_rect(a_rect, k2.WHITE)
-	lives := fmt.tprintf("LIVES: %v", player.lives)
-	score := fmt.tprintf("SCORE: %v", player.score)
-	k2.draw_text(lives, {a_rect.x + 5, a_rect.y + 5}, 30, k2.DARK_BLUE)
-	k2.draw_text(score, {a_rect.x + 5, a_rect.y + 40}, 30, k2.DARK_BLUE)
-}
-
 show_score_board :: proc() {
-	k2.draw_rect(score_board.rect, k2.WHITE)
+	src := k2.get_texture_rect(score_board_tex)
+	grow_factor: f32 = 12
+	dst := k2.Rect {
+		x = 10,
+		y = 10,
+		w = grow_factor*16,
+		h = grow_factor*9,
+	}
+	k2.draw_texture_fit(score_board_tex, src, dst, tint=k2.LIGHT_BROWN)
+
 	lives := fmt.tprintf("LIVES: %v", player.lives)
 	score := fmt.tprintf("SCORE: %v", player.score)
 	x := score_board.rect.x
 	y := score_board.rect.y
-	k2.draw_text(lives, {x + 5, y + 5}, 20, k2.DARK_BLUE)
-	k2.draw_text(score, {x + 5, y + 25}, 20, k2.DARK_BLUE)
+	text_color := k2.YELLOW
+	k2.draw_text(lives, {x + 40, y + 30}, 20, text_color)
+	k2.draw_text(score, {x + 40, y + 55}, 20, text_color)
 }
 
 // =============================================================================================
