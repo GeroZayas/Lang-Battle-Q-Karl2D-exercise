@@ -467,7 +467,6 @@ update :: proc() {
 
 	if screen_state == .Game {
 
-
 		clear(&colliders)
 
 		k2.clear(CLEAR_COLOR)
@@ -501,16 +500,16 @@ update :: proc() {
 			ui_debug_options()
 		}
 
-		if k2.key_is_held(.Up) {
+		if k2.key_is_held(.Up) || k2.key_is_held(.W) {
 			player_movement.y -= 1
 		}
-		if k2.key_is_held(.Down) {
+		if k2.key_is_held(.Down) || k2.key_is_held(.S){
 			player_movement.y += 1
 		}
-		if k2.key_is_held(.Left) {
+		if k2.key_is_held(.Left) || k2.key_is_held(.A){
 			player_movement.x -= 1
 		}
-		if k2.key_is_held(.Right) {
+		if k2.key_is_held(.Right) || k2.key_is_held(.D){
 			player_movement.x += 1
 		}
 
