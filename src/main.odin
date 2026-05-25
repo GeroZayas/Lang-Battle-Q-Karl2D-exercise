@@ -7,7 +7,7 @@ TODO(gero):
 
 package Lang_Battle_Q_game
 
-import k2 "../karl2d"
+import k2 "../../karl2d"
 import "base:runtime"
 import "core:encoding/json"
 import "core:fmt"
@@ -119,13 +119,25 @@ Player :: struct {
 }
 
 
-Score :: struct {}
+ScoreBoard :: struct {
+	pos:   k2.Vec2,
+	// tex:   k2.Texture,
+	rect:   k2.Rect,
+	score: int,
+	lives: int,
+	level: int,
+}
 
-Screen_State :: enum {
+score_board: ScoreBoard
+
+Screen_Type :: enum {
 	Game,
 	Quiz_Popup,
 	Intro,
 	Game_Over,
+	Level_Transition,
+	Settings,
+	Final_Won,
 }
 
 RectId :: struct {
@@ -158,14 +170,13 @@ current_question: string
 message: string
 show_answers: bool = false
 
-screen_state := Screen_State.Intro
+screen_state := Screen_Type.Intro
 
 PLAYER_VELOCITY: f32 = 300
 ENEMY_SPEED: u8 = 5
 
 game_finished: bool
-
-current_level_idx: int
+current_level : int
 
 // ------------------------------------------------------------------------
 // Players and Enemies
@@ -227,7 +238,6 @@ init :: proc() {
 	)
 	change_screens = false
 	show_response_message_timer = false
-	current_level_idx = 0
 
 	// ------------------------------------------------------------------------
 	// LOADING THE JSON WITH THE QUESTIONS AND ANSWERS
@@ -409,6 +419,17 @@ init :: proc() {
 	)
 
 	// fmt.println(quiz_boxes)
+
+	current_level = 1
+
+	// INIT SCOREBOARD
+	score_board = {
+		pos   = {0, 0},
+		rect   = {10, 10, 150, 70},
+		score = player.score,
+		lives = player.lives,
+		level = current_level,
+	}
 }
 
 // =============================================================================================
@@ -440,13 +461,21 @@ update :: proc() {
 		}
 	}
 
+
+
 	if screen_state == .Game {
+
+
 		clear(&colliders)
 
 		k2.clear(CLEAR_COLOR)
 		responded = false
 
+
 		k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_BLUE)
+
+		show_score_board()
+
 
 		if player.lives == 0 {
 			time.sleep(1 * time.Second)
@@ -786,6 +815,9 @@ show_quiz_screen :: proc() {
 	k2.clear(QUIZ_COLOR)
 	k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_RED)
 
+	show_score_board()
+	
+
 	btn_colliders := make([dynamic]Button, context.temp_allocator)
 
 	// popup simple dentro de la misma ventana
@@ -894,7 +926,7 @@ show_quiz_screen :: proc() {
 		question_index = 0
 	}
 
-	show_player_score(player)
+	// show_player_score(player)
 
 	question_font_size: f32
 
@@ -1006,6 +1038,16 @@ show_player_score :: proc(player: Player) {
 	score := fmt.tprintf("SCORE: %v", player.score)
 	k2.draw_text(lives, {a_rect.x + 5, a_rect.y + 5}, 30, k2.DARK_BLUE)
 	k2.draw_text(score, {a_rect.x + 5, a_rect.y + 40}, 30, k2.DARK_BLUE)
+}
+
+show_score_board :: proc() {
+	k2.draw_rect(score_board.rect, k2.WHITE)
+	lives := fmt.tprintf("LIVES: %v", player.lives)
+	score := fmt.tprintf("SCORE: %v", player.score)
+	x := score_board.rect.x
+	y := score_board.rect.y
+	k2.draw_text(lives, {x + 5, y + 5}, 20, k2.DARK_BLUE)
+	k2.draw_text(score, {x + 5, y + 25}, 20, k2.DARK_BLUE)
 }
 
 // =============================================================================================
