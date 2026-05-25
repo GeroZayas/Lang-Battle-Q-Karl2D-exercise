@@ -57,6 +57,7 @@ QuizBoxState :: enum {
 }
 
 // --------------------------------------
+// Bookmark ***
 Quiz_Box :: struct {
 	index:     int,
 	questions: string,
@@ -69,7 +70,7 @@ Quiz_Boxes :: struct {
 	boxes_array: [dynamic]Quiz_Box,
 }
 
-quiz_boxes: Quiz_Boxes
+quiz_boxes: Quiz_Boxes // Bookmark ***
 current_quiz_box: ^Quiz_Box
 // --------------------------------------
 
@@ -121,7 +122,7 @@ Player :: struct {
 ScoreBoard :: struct {
 	pos:   k2.Vec2,
 	// tex:   k2.Texture,
-	rect:   k2.Rect,
+	rect:  k2.Rect,
 	score: int,
 	lives: int,
 	level: int,
@@ -183,7 +184,7 @@ PLAYER_VELOCITY: f32 = 300
 ENEMY_SPEED: u8 = 5
 
 game_finished: bool
-current_level : int
+current_level: int
 
 // ------------------------------------------------------------------------
 // Players and Enemies
@@ -265,7 +266,7 @@ init :: proc() {
 
 	{
 		// level 2
-		unm_err := json.unmarshal(data_level_2_python, &quiz_doc_level_2)
+		unm_err := json.unmarshal(data_level_2_python, &quiz_doc_level_2, allocator = arena_alloc)
 		if unm_err != nil {
 			log.debug(unm_err)
 		}
@@ -273,7 +274,7 @@ init :: proc() {
 
 	{
 		// level 3
-		unm_err := json.unmarshal(data_level_3_python, &quiz_doc_level_3)
+		unm_err := json.unmarshal(data_level_3_python, &quiz_doc_level_3, allocator = arena_alloc)
 		if unm_err != nil {
 			log.debug(unm_err)
 		}
@@ -332,7 +333,9 @@ init :: proc() {
 		#load("./resources/textures/you-died-medium-cropped.png"),
 	)
 
-	score_board_tex = k2.load_texture_from_bytes(#load("./resources/textures/scoreboard_1_big.png"))
+	score_board_tex = k2.load_texture_from_bytes(
+		#load("./resources/textures/scoreboard_1_big.png"),
+	)
 
 	// ------------------------------------------------------------------------
 	// Random position in the world, for when needed
@@ -372,7 +375,7 @@ init :: proc() {
 		score = 0,
 	}
 
-	question_index_array = {"1", "2", "3", "4"}
+	question_index_array = {"1", "2", "3", "4"} // TODO fix this ***
 	question_index = 0
 
 	intro_title_game = {
@@ -398,6 +401,12 @@ init :: proc() {
 
 
 	position_set_avail: [3]Position_Set = {position_set_1, position_set_2, position_set_3}
+
+	// =============== CURRENT LEVEL ===============
+	current_level = 2
+	// =============== CURRENT LEVEL ===============
+
+	// Bookmark ***
 
 	// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
 	// and draw in those positions
@@ -435,14 +444,21 @@ init :: proc() {
 		},
 	)
 
+	// if current_level == 2 { 	// ***
+
+	// }
+
+	// if current_level == 3 { 	// ***
+
+	// }
+
 	// fmt.println(quiz_boxes)
 
-	current_level = 1
 
 	// INIT SCOREBOARD
 	score_board = {
 		pos   = {0, 0},
-		rect   = {10, 10, 150, 70},
+		rect  = {10, 10, 150, 70},
 		score = player.score,
 		lives = player.lives,
 		level = current_level,
@@ -514,13 +530,13 @@ update :: proc() {
 		if k2.key_is_held(.Up) || k2.key_is_held(.W) {
 			player_movement.y -= 1
 		}
-		if k2.key_is_held(.Down) || k2.key_is_held(.S){
+		if k2.key_is_held(.Down) || k2.key_is_held(.S) {
 			player_movement.y += 1
 		}
-		if k2.key_is_held(.Left) || k2.key_is_held(.A){
+		if k2.key_is_held(.Left) || k2.key_is_held(.A) {
 			player_movement.x -= 1
 		}
-		if k2.key_is_held(.Right) || k2.key_is_held(.D){
+		if k2.key_is_held(.Right) || k2.key_is_held(.D) {
 			player_movement.x += 1
 		}
 
@@ -832,24 +848,16 @@ show_quiz_screen :: proc() {
 	// OJO
 	q_i = question_index_array[question_index]
 
-	// Bookmark ***
-
 	switch current_level {
-		case 1:
+	case 1:
 		current_quiz_doc = quiz_doc_level_1
-		case 2:
+	case 2:
 		current_quiz_doc = quiz_doc_level_2
-		case 3:
+	case 3:
 		current_quiz_doc = quiz_doc_level_3
-		case:
+	case:
 		print("SELECT Correct Quiz Doc for level")
 	}
-
-	// current_question = quiz_doc_level_1.all_questions[q_i].question
-
-	// current_correct_answer = quiz_doc_level_1.all_questions[q_i].correct_answer
-
-	// answer_buttons = show_answer_buttons(quiz_doc_level_1.all_questions[q_i].answers)
 
 	current_question = current_quiz_doc.all_questions[q_i].question
 
@@ -861,7 +869,10 @@ show_quiz_screen :: proc() {
 		append(&btn_colliders, answer_btn)
 	}
 
-	k2.draw_texture(quiz_time_text.tex, {f32(settings.SCREEN_WIDTH)/2 - f32(quiz_time_text.tex.width)/2, 40})
+	k2.draw_texture(
+		quiz_time_text.tex,
+		{f32(settings.SCREEN_WIDTH) / 2 - f32(quiz_time_text.tex.width) / 2, 40},
+	)
 	k2.draw_text(
 		"Hit ESC to close",
 		{f32(settings.SCREEN_WIDTH) - 300, f32(settings.SCREEN_HEIGHT) - 50},
@@ -1039,10 +1050,10 @@ show_score_board :: proc() {
 	dst := k2.Rect {
 		x = 10,
 		y = 10,
-		w = grow_factor*16,
-		h = grow_factor*9,
+		w = grow_factor * 16,
+		h = grow_factor * 9,
 	}
-	k2.draw_texture_fit(score_board_tex, src, dst, tint=k2.LIGHT_BROWN)
+	k2.draw_texture_fit(score_board_tex, src, dst, tint = k2.LIGHT_BROWN)
 
 	lives := fmt.tprintf("LIVES: %v", player.lives)
 	score := fmt.tprintf("SCORE: %v", player.score)
