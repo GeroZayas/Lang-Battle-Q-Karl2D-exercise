@@ -179,7 +179,7 @@ current_question: string
 message: string
 show_answers: bool = false
 
-screen_state := Screen_Type.DevOne
+screen_state := Screen_Type.Game
 
 PLAYER_VELOCITY: f32 = 300
 ENEMY_SPEED: u8 = 5
@@ -218,6 +218,7 @@ intro_title_game: Game_Title_Texture
 background_intro: Background_Texture
 quiz_time_text: Background_Texture
 you_died_text: Background_Texture
+quiz_box_tex : k2.Texture
 
 // MORE TEXTURES
 score_board_tex: k2.Texture
@@ -287,7 +288,7 @@ init :: proc() {
 	intro = true
 
 	player_tex := k2.load_texture_from_bytes(#load("./resources/sprites/python-small-v2.png"))
-	quiz_box_tex := k2.load_texture_from_bytes(
+	quiz_box_tex = k2.load_texture_from_bytes(
 		#load("./resources/textures/quiz-box-cpq-v1-small.png"),
 	)
 	intro_title_game_tex := k2.load_texture_from_bytes(
@@ -366,7 +367,7 @@ init :: proc() {
 	}
 
 	// =============== CURRENT LEVEL ===============
-	current_level = 2
+	current_level = 1
 	// =============== CURRENT LEVEL ===============
 
 	// alias for convenience:
@@ -1119,12 +1120,31 @@ show_dev_one_screen :: proc() {
 	}
 
 
+	// =============================================================
+	// box := Quiz_Box{
+	// 	index = 1,
+	// 	questions = "a question here",
+	// 	tex = quiz_box_tex,
+	// 	pos = k2.get_mouse_position(),
+	// 	answered = .NOT_ANSWERED,
+	// }
+
+	
+	// =============================================================
+
+
 	if k2.key_went_down(.NP_Add) {
 		k2.draw_text("KEY HAS BEEN PRESSED", k2.get_mouse_position(), 50, k2.WHITE)
 	}
+
 	the_msg_1 := "Click to add CPQ"
+
+	k2.draw_text(the_msg_1, k2.get_mouse_position() + {25, 30}, 30, k2.WHITE)
 	
-	k2.draw_text(the_msg_1, k2.get_mouse_position(), 30, k2.WHITE)
+	if k2.mouse_button_went_down(.Left) {
+		// k2.draw_texture(box.tex, box.pos, origin = k2.rect_center(k2.get_texture_rect(box.tex)))
+		append(&quiz_boxes.boxes_array, create_quiz_box())
+	}
 
 	k2.draw_text(mouse_pos_text, {20, 10}, 20, k2.YELLOW)
 	k2.draw_text(background_texture_size_text, {20, 50}, 20, k2.YELLOW)
@@ -1132,8 +1152,20 @@ show_dev_one_screen :: proc() {
 
 	if k2.key_went_down(.Escape) {
 		player.pos = get_random_pos_in_world(world_dim)
-		screen_state = .Intro
+		screen_state = .Game
 	}
+}
+
+create_quiz_box :: proc() -> Quiz_Box{
+	new_box := Quiz_Box{
+		index = 1 + len(quiz_boxes.boxes_array),
+		questions = "a question here",
+		tex = quiz_box_tex,
+		pos = k2.get_mouse_position(),
+		answered = .NOT_ANSWERED,
+	}
+	log.debug("new_box.index", new_box.index)
+	return new_box
 }
 
 show_grid: bool = false

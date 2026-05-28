@@ -4,6 +4,15 @@ NOTES:
 FEAT - DEV:
 The idea is to have a SCREEN for devs where we can pick up and drag the CPQs into the game area and then  hit a button and save that position for a given level
 
+************************************************
+
+1st -> click and add a CPQ right there on the clicked position
+
+************************************************
+
+2nd -> save that as a json
+3rd -> load that json and draw it on the screen
+
 ...
 FEAT: Level Up
 	-> loading the next json file of level 2 python
