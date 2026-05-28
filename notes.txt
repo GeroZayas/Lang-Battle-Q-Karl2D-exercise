@@ -1,5 +1,8 @@
 NOTES:
 ------
+...
+FEAT - DEV:
+The idea is to have a SCREEN for devs where we can pick up and drag the CPQs into the game area and then  hit a button and save that position for a given level
 
 ...
 FEAT: Level Up
@@ -11,7 +14,7 @@ FEAT: Level Up
 FEAT: Music streaming all the time (optionally turn off)
 
 ...
-FEAT: Options / Settings Screen
+FEAT: Options / Settings NEW SCREEN
 	-> turn on/off the music
 	-> overall volume of sound effects
 
