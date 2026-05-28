@@ -1119,6 +1119,13 @@ show_dev_one_screen :: proc() {
 	}
 
 
+	if k2.key_went_down(.NP_Add) {
+		k2.draw_text("KEY HAS BEEN PRESSED", k2.get_mouse_position(), 50, k2.WHITE)
+	}
+	the_msg_1 := "Click to add CPQ"
+	
+	k2.draw_text(the_msg_1, k2.get_mouse_position(), 30, k2.WHITE)
+
 	k2.draw_text(mouse_pos_text, {20, 10}, 20, k2.YELLOW)
 	k2.draw_text(background_texture_size_text, {20, 50}, 20, k2.YELLOW)
 
