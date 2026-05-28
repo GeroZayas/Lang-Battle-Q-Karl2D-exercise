@@ -138,6 +138,7 @@ Screen_Type :: enum {
 	Level_Transition,
 	Settings,
 	Final_Won,
+	DevOne,
 }
 
 RectId :: struct {
@@ -178,7 +179,7 @@ current_question: string
 message: string
 show_answers: bool = false
 
-screen_state := Screen_Type.Intro
+screen_state := Screen_Type.DevOne
 
 PLAYER_VELOCITY: f32 = 300
 ENEMY_SPEED: u8 = 5
@@ -285,37 +286,6 @@ init :: proc() {
 
 	intro = true
 
-	screen_w := f32(settings.SCREEN_WIDTH)
-	screen_h := f32(settings.SCREEN_HEIGHT)
-
-	position_set_1 := Position_Set {
-		positions = {
-			{screen_w * 0.10, screen_h * 0.20},
-			{screen_w * 0.20, screen_h * 0.55},
-			{screen_w * 0.68, screen_h * 0.30},
-			{screen_w * 0.90, screen_h * 0.85},
-		},
-	}
-
-	position_set_2 := Position_Set {
-		positions = {
-			{screen_w * 0.23, screen_h * 0.23},
-			{screen_w * 0.71, screen_h * 0.57},
-			{screen_w * 0.47, screen_h * 0.88},
-			{screen_w * 0.91, screen_h * 0.13},
-		},
-	}
-
-	position_set_3 := Position_Set {
-		positions = {
-			{screen_w * 0.12, screen_h * 0.88},
-			{screen_w * 0.38, screen_h * 0.72},
-			{screen_w * 0.66, screen_h * 0.28},
-			{screen_w * 0.84, screen_h * 0.54},
-		},
-	}
-
-
 	player_tex := k2.load_texture_from_bytes(#load("./resources/sprites/python-small-v2.png"))
 	quiz_box_tex := k2.load_texture_from_bytes(
 		#load("./resources/textures/quiz-box-cpq-v1-small.png"),
@@ -395,54 +365,118 @@ init :: proc() {
 		tex = game_over_text_tex,
 	}
 
-
-	// alias for convenience:
-	grpiw :: get_random_pos_in_world
-
-
-	position_set_avail: [3]Position_Set = {position_set_1, position_set_2, position_set_3}
-
 	// =============== CURRENT LEVEL ===============
 	current_level = 2
 	// =============== CURRENT LEVEL ===============
 
-	// Bookmark ***
+	// alias for convenience:
+	grpiw :: get_random_pos_in_world
 
-	// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
-	// and draw in those positions
-	rand_position_set := rand.choice(position_set_avail[:])
+	switch current_level {
+	case 1:
+		position_set_avail: [3]Position_Set_4 = {
+			position_set_4_1,
+			position_set_4_2,
+			position_set_4_3,
+		}
 
-	append(
-		&quiz_boxes.boxes_array,
-		Quiz_Box {
-			index = 0,
-			questions = "Q1",
-			tex = quiz_box_tex,
-			pos = rand_position_set.positions[0],
-			answered = .NOT_ANSWERED,
-		},
-		Quiz_Box {
-			index = 1,
-			questions = "Q2",
-			tex = quiz_box_tex,
-			pos = rand_position_set.positions[1],
-			answered = .NOT_ANSWERED,
-		},
-		Quiz_Box {
-			index = 2,
-			questions = "Q3",
-			tex = quiz_box_tex,
-			pos = rand_position_set.positions[2],
-			answered = .NOT_ANSWERED,
-		},
-		Quiz_Box {
-			index = 3,
-			questions = "Q4",
-			tex = quiz_box_tex,
-			pos = rand_position_set.positions[3],
-			answered = .NOT_ANSWERED,
-		},
-	)
+		// Bookmark ***
+
+		// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
+		// and draw in those positions
+		rand_position_set := rand.choice(position_set_avail[:])
+
+		append(
+			&quiz_boxes.boxes_array,
+			Quiz_Box {
+				index = 0,
+				questions = "Q1",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[0],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 1,
+				questions = "Q2",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[1],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 2,
+				questions = "Q3",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[2],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 3,
+				questions = "Q4",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[3],
+				answered = .NOT_ANSWERED,
+			},
+		)
+	case 2:
+		position_set_avail: [1]Position_Set_6 = { 	// TODO: change to [3]
+			position_set_6_1,
+			// position_set_6_2,
+			// position_set_6_3,
+		}
+
+		// Bookmark ***
+
+		// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
+		// and draw in those positions
+		rand_position_set := rand.choice(position_set_avail[:])
+		append(
+			&quiz_boxes.boxes_array,
+			Quiz_Box {
+				index = 0,
+				questions = "Q1",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[0],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 1,
+				questions = "Q2",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[1],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 2,
+				questions = "Q3",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[2],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 3,
+				questions = "Q4",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[3],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 4,
+				questions = "Q5",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[4],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 5,
+				questions = "Q6",
+				tex = quiz_box_tex,
+				pos = rand_position_set.positions[5],
+				answered = .NOT_ANSWERED,
+			},
+		)
+
+	}
+
 
 	// if current_level == 2 { 	// ***
 
@@ -521,10 +555,17 @@ update :: proc() {
 
 		if k2.key_went_down(.F2) do UI_DEBUG = !UI_DEBUG
 		if k2.key_went_down(.F3) do screen_state = .Quiz_Popup
+		if k2.key_went_down(.F4) do screen_state = .DevOne
 
 		// screen_state
 		if UI_DEBUG {
 			ui_debug_options()
+			if k2.key_went_down(.F1) {
+				show_grid = !show_grid
+			}
+			if show_grid do draw_grid()
+		} else {
+			ENEMY_SPEED = 5
 		}
 
 		if k2.key_is_held(.Up) || k2.key_is_held(.W) {
@@ -679,6 +720,7 @@ update :: proc() {
 		}
 
 		// ENEMY MOVEMENT
+
 		odin.pos.x += f32(ENEMY_SPEED)
 
 		pc := calc_player_collider(player.pos)
@@ -694,6 +736,7 @@ update :: proc() {
 		}
 		// ------------------------------------------------------------------------
 
+		////////////////////// QUIZ POPUP SCREEN ////////////////////
 	} else if screen_state == .Quiz_Popup {
 		show_quiz_screen()
 
@@ -704,6 +747,8 @@ update :: proc() {
 		player.lives = 3
 		player.score = 0
 		game_over_screen()
+	} else if screen_state == .DevOne {
+		show_dev_one_screen()
 	}
 
 	k2.present()
@@ -785,7 +830,7 @@ main :: proc() {
 // =============================================================================================
 
 ui_debug_options :: proc() {
-	k2.draw_rect({10, 100, 300, 600}, k2.BROWN)
+	k2.draw_rect({10, 100, 600, 600}, k2.DARK_BROWN)
 	text_size: f32 = 40
 	text_mesg := " - THIS IS DEBUG UI MODE\n press F3 for Quiz Screen- "
 	text_width := k2.measure_text(text_mesg, text_size)
@@ -798,9 +843,16 @@ ui_debug_options :: proc() {
 	for text_size < 60 {
 		text_size += 2
 	}
-	player_pos_text := fmt.tprintfln("player position %v", player.pos)
+
+	ENEMY_SPEED = 0
+
+	mouse_pos := k2.get_mouse_position()
+
+	player_pos_text := fmt.tprintfln("PLAYER position %v", player.pos)
+	mouse_pos_text := fmt.tprintfln("MOUSE position %v", mouse_pos)
 
 	k2.draw_text(player_pos_text, {20, 110}, 20, k2.YELLOW)
+	k2.draw_text(mouse_pos_text, {20, 150}, 20, k2.YELLOW)
 
 }
 
@@ -1039,6 +1091,66 @@ game_over_screen :: proc() {
 	if k2.key_went_down(.Enter) {
 		player.pos = get_random_pos_in_world(world_dim)
 		screen_state = .Intro
+	}
+}
+
+
+show_dev_one_screen :: proc() {
+	k2.clear(k2.GREEN)
+
+	background_texture_size := k2.get_texture_rect(background_intro.tex)
+
+	k2.draw_texture(background_intro.tex, {0, 0}, tint = k2.DARK_GREEN)
+
+	mouse_pos := k2.get_mouse_position()
+
+	mouse_pos_text := fmt.tprintfln("MOUSE position %v", mouse_pos)
+	background_texture_size_text := fmt.tprintfln(
+		"background_texture_size %v",
+		background_texture_size,
+	)
+
+	if k2.key_went_down(.F1) {
+		show_grid = !show_grid
+	}
+
+	if show_grid {
+		draw_grid()
+	}
+
+
+	k2.draw_text(mouse_pos_text, {20, 10}, 20, k2.YELLOW)
+	k2.draw_text(background_texture_size_text, {20, 50}, 20, k2.YELLOW)
+
+
+	if k2.key_went_down(.Escape) {
+		player.pos = get_random_pos_in_world(world_dim)
+		screen_state = .Intro
+	}
+}
+
+show_grid: bool = false
+
+draw_grid :: proc() {
+	line_v := f32(settings.SCREEN_WIDTH / 10)
+	line_h := f32(settings.SCREEN_HEIGHT / 10)
+
+	for i := 0; i <= settings.SCREEN_WIDTH - int(line_v); i += int(line_v) {
+		k2.draw_line(
+			{f32(i) + line_v, 0},
+			{f32(i) + line_v, f32(settings.SCREEN_HEIGHT)},
+			1,
+			k2.YELLOW,
+		)
+	}
+
+	for i := 0; i <= settings.SCREEN_HEIGHT - int(line_h); i += int(line_h) {
+		k2.draw_line(
+			{0, f32(i) + line_h},
+			{f32(settings.SCREEN_WIDTH), f32(i) + line_h},
+			1,
+			k2.YELLOW,
+		)
 	}
 }
 
