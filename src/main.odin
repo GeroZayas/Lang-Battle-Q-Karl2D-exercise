@@ -218,7 +218,7 @@ intro_title_game: Game_Title_Texture
 background_intro: Background_Texture
 quiz_time_text: Background_Texture
 you_died_text: Background_Texture
-quiz_box_tex : k2.Texture
+quiz_box_tex: k2.Texture
 
 // MORE TEXTURES
 score_board_tex: k2.Texture
@@ -565,7 +565,11 @@ update :: proc() {
 				show_grid = !show_grid
 			}
 			if show_grid do draw_grid()
+
 		} else {
+			// TODO: change this so that we make sure it is always the same as
+			// when first determined, bc it could change and then it would
+			// be slower after leaving the debug screen
 			ENEMY_SPEED = 5
 		}
 
@@ -849,6 +853,8 @@ ui_debug_options :: proc() {
 
 	mouse_pos := k2.get_mouse_position()
 
+	create_quiz_box_cpq_with_left_click()
+
 	player_pos_text := fmt.tprintfln("PLAYER position %v", player.pos)
 	mouse_pos_text := fmt.tprintfln("MOUSE position %v", mouse_pos)
 
@@ -1119,20 +1125,6 @@ show_dev_one_screen :: proc() {
 		draw_grid()
 	}
 
-
-	// =============================================================
-	// box := Quiz_Box{
-	// 	index = 1,
-	// 	questions = "a question here",
-	// 	tex = quiz_box_tex,
-	// 	pos = k2.get_mouse_position(),
-	// 	answered = .NOT_ANSWERED,
-	// }
-
-	
-	// =============================================================
-
-
 	if k2.key_went_down(.NP_Add) {
 		k2.draw_text("KEY HAS BEEN PRESSED", k2.get_mouse_position(), 50, k2.WHITE)
 	}
@@ -1140,11 +1132,8 @@ show_dev_one_screen :: proc() {
 	the_msg_1 := "Click to add CPQ"
 
 	k2.draw_text(the_msg_1, k2.get_mouse_position() + {25, 30}, 30, k2.WHITE)
-	
-	if k2.mouse_button_went_down(.Left) {
-		// k2.draw_texture(box.tex, box.pos, origin = k2.rect_center(k2.get_texture_rect(box.tex)))
-		append(&quiz_boxes.boxes_array, create_quiz_box())
-	}
+
+	create_quiz_box_cpq_with_left_click()
 
 	k2.draw_text(mouse_pos_text, {20, 10}, 20, k2.YELLOW)
 	k2.draw_text(background_texture_size_text, {20, 50}, 20, k2.YELLOW)
@@ -1156,16 +1145,18 @@ show_dev_one_screen :: proc() {
 	}
 }
 
-create_quiz_box :: proc() -> Quiz_Box{
-	new_box := Quiz_Box{
-		index = 1 + len(quiz_boxes.boxes_array),
-		questions = "a question here",
-		tex = quiz_box_tex,
-		pos = k2.get_mouse_position(),
-		answered = .NOT_ANSWERED,
+create_quiz_box_cpq_with_left_click :: proc() {
+	if k2.mouse_button_went_down(.Left) {
+		new_box := Quiz_Box {
+			index     = 1 + len(quiz_boxes.boxes_array),
+			questions = "a question here",
+			tex       = quiz_box_tex,
+			pos       = k2.get_mouse_position(),
+			answered  = .NOT_ANSWERED,
+		}
+		log.debug("new_box.index", new_box.index)
+		append(&quiz_boxes.boxes_array, new_box)
 	}
-	log.debug("new_box.index", new_box.index)
-	return new_box
 }
 
 show_grid: bool = false

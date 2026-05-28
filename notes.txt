@@ -4,6 +4,9 @@ NOTES:
 FEAT - DEV:
 The idea is to have a SCREEN for devs where we can pick up and drag the CPQs into the game area and then  hit a button and save that position for a given level
 
+- Need to Delete/Erase with Right Click
+- 
+
 ************************************************
 
 1st -> click and add a CPQ right there on the clicked position
