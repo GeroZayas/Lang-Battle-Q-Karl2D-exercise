@@ -1129,10 +1129,6 @@ show_dev_one_screen :: proc() {
 		k2.draw_text("KEY HAS BEEN PRESSED", k2.get_mouse_position(), 50, k2.WHITE)
 	}
 
-	the_msg_1 := "Click to add CPQ"
-
-	k2.draw_text(the_msg_1, k2.get_mouse_position() + {25, 30}, 30, k2.WHITE)
-
 	create_quiz_box_cpq_with_left_click()
 
 	k2.draw_text(mouse_pos_text, {20, 10}, 20, k2.YELLOW)
@@ -1146,6 +1142,8 @@ show_dev_one_screen :: proc() {
 }
 
 create_quiz_box_cpq_with_left_click :: proc() {
+	the_msg_1 := "Click to add CPQ"
+	k2.draw_text(the_msg_1, k2.get_mouse_position() + {25, 30}, 20, k2.WHITE)
 	if k2.mouse_button_went_down(.Left) {
 		new_box := Quiz_Box {
 			index     = 1 + len(quiz_boxes.boxes_array),
