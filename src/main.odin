@@ -15,6 +15,7 @@ import "core:log"
 import "core:math/linalg"
 import "core:math/rand"
 import "core:mem"
+import "core:os"
 import "core:time"
 
 Rect :: k2.Rect
@@ -233,6 +234,14 @@ playing_sounds: [dynamic]k2.Sound
 // === start SOUNDS FOR CORRECT OR INCORRECT ANSWERS SELECTED ===
 correct_response_sound: k2.Sound
 wrong_response_sound: k2.Sound
+
+
+// ------------------------------------------------------------------------
+// JSON FILE FOR POSITIONS
+// TODO: Change the loading of this json file to use #load
+positions_json_file_path: string = "./testing_positions.json"
+positions_array: [dynamic]string
+
 
 // =============================================================================================
 // PROCEDURES
@@ -839,6 +848,7 @@ ui_debug_options :: proc() {
 	text_size: f32 = 40
 	text_mesg := " - THIS IS DEBUG UI MODE\n press F3 for Quiz Screen- "
 	text_width := k2.measure_text(text_mesg, text_size)
+
 	k2.draw_text(
 		text_mesg,
 		{f32(world_dim[0] / 2) - f32(text_width.x / 2), 20},
@@ -860,6 +870,17 @@ ui_debug_options :: proc() {
 
 	k2.draw_text(player_pos_text, {20, 110}, 20, k2.YELLOW)
 	k2.draw_text(mouse_pos_text, {20, 150}, 20, k2.YELLOW)
+
+	if k2.key_went_down(.Escape) {
+		positions_json_file_ptr, err := os.open(positions_json_file_path, {.Write})
+		defer os.close(positions_json_file_ptr)
+
+		for pos in positions_array {
+			new_box_pos_str := fmt.tprintf("%v\n", pos)
+			write_position_file(positions_json_file_ptr, pos)
+		}
+		UI_DEBUG = !UI_DEBUG
+	}
 
 }
 
@@ -1152,10 +1173,25 @@ create_quiz_box_cpq_with_left_click :: proc() {
 			pos       = k2.get_mouse_position(),
 			answered  = .NOT_ANSWERED,
 		}
+
 		log.debug("new_box.index", new_box.index)
+		log.debug("NEW BOX - POSITION -", new_box.pos)
+
+		new_box_pos_str := fmt.tprintf("%v\n", new_box.pos)
+		append(&positions_array, new_box_pos_str)
+		log.debug("positions_array --->>", positions_array)
+
 		append(&quiz_boxes.boxes_array, new_box)
 	}
 }
+
+write_position_file :: proc(file_ptr: ^os.File, data: string) {
+	bytes_written, wf_err := os.write_strings(file_ptr, data)
+	if wf_err != nil {
+		panic("Error writing the file") // TODO maybe not panic here
+	}
+}
+
 
 show_grid: bool = false
 
