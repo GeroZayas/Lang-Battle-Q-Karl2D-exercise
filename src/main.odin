@@ -873,6 +873,27 @@ ui_debug_options :: proc() {
 
 	if k2.key_went_down(.Escape) {
 		positions_json_file_ptr, err := os.open(positions_json_file_path, {.Write})
+
+		data_from_file, f_err := os.read_entire_file(positions_json_file_path, context.allocator)
+
+		if f_err != nil {
+			log.debug("PROBLEM with reading the positions json file data")
+		}
+
+		if len(data_from_file) > 0 {
+			log.debug("File is NOT empty\n", string(data_from_file))
+			empty_data : []byte
+			empty_data = {0}
+			// NOTE: The idea here is to clear the file up so as to put new positions:
+			// that's why I use the write_entire_file here (although it might not be correct to do it like this)
+			write_err := os.write_entire_file(positions_json_file_path, empty_data)
+			if write_err != nil {
+				fmt.eprintfln("Failed writing 'my_file'. Error: %v", write_err)
+			}
+		} else {
+			log.debug("File IS empty")
+		}
+
 		defer os.close(positions_json_file_ptr)
 
 		for pos in positions_array {
