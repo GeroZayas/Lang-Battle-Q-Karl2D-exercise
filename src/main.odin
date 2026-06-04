@@ -7,6 +7,7 @@ TODO(gero):
 
 package Lang_Battle_Q_game
 
+import "core:strings"
 import k2 "../../karl2d"
 import "base:runtime"
 import "core:encoding/json"
@@ -863,6 +864,8 @@ ui_debug_options :: proc() {
 
 	mouse_pos := k2.get_mouse_position()
 
+	// THIS IS THE PROC we use to create new cpqs (quiz boxes) wherever we
+	// click on the screen :)
 	create_quiz_box_cpq_with_left_click()
 
 	player_pos_text := fmt.tprintfln("PLAYER position %v", player.pos)
@@ -1184,8 +1187,13 @@ show_dev_one_screen :: proc() {
 }
 
 create_quiz_box_cpq_with_left_click :: proc() {
-	the_msg_1 := "Click to add CPQ"
-	k2.draw_text(the_msg_1, k2.get_mouse_position() + {25, 30}, 20, k2.WHITE)
+	add_message := "Left click + CPQ"
+	remove_message := "Right click - CPQ"
+	mouse_position := k2.get_mouse_position()
+
+	k2.draw_text(add_message, mouse_position + {25, 30}, 20, k2.LIGHT_GREEN)
+	k2.draw_text(remove_message, mouse_position + {25, 50}, 20, k2.LIGHT_RED)
+
 	if k2.mouse_button_went_down(.Left) {
 		new_box := Quiz_Box {
 			index     = 1 + len(quiz_boxes.boxes_array),
@@ -1274,6 +1282,11 @@ mouse_on_button :: proc(button_rect: k2.Rect) -> bool {
 		return true
 	}
 	return false
+}
+
+// Explicit overloadding so I can use the same proc with another name :)
+mouse_on_collider :: proc {
+	mouse_on_button,
 }
 
 // =============================================================================================
