@@ -1,63 +1,55 @@
+#+feature dynamic-literals
+
 package scratch_buffer
 
+import k2 "../../karl2d"
 import "core:encoding/json"
-import "core:fmt"
-import "core:log"
 import "core:os"
-import "core:strings"
+import "core:fmt"
 
-DataErrors :: enum {
-    ERROR_OPENING_FILE,
-    ERROR_LOADING_JSON
+print := fmt.printf
+
+Vec2: k2.Vec2
+
+FILE_NAME :: `C:\Users\Gero\Documents\Gero_Coding\Odin\Lang-Battle-Q-Karl2D-exercise\scratch_buffer\positions.json`
+
+
+Position_Set :: struct {
+    position_set_1: [dynamic][2]f32,
+    position_set_2: [dynamic][2]f32,
+    position_set_3: [dynamic][2]f32
+
 }
 
-Vector2 :: struct {
-    pos : [2]int
+GeneralPosSet :: struct{
+    level_1 : Position_Set,
+    level_2 : Position_Set,
+    level_3 : Position_Set
 }
 
-PositionSet :: struct {
-    array_of_positions : [4]Vector2 
+gen_pos_set: GeneralPosSet
+
+// VARS for the UI
+Settings :: struct {
+    SCREEN_WIDTH:  int,
+    SCREEN_HEIGHT: int,
 }
 
 
-JsonStruct :: struct {
-    position_set_1: [4][2]int,
-    position_set_2: [4][2]int,
-    position_set_3: [4][2]int,
-}
-
-json_struct : JsonStruct
-
-MJsonStructure :: struct {
-    message: string,
-    age: int
-}
-
-m_json_struct : MJsonStructure
-
-print :: fmt.println
-file_string : string
-
-main :: proc() {
-	path: string = "./positions.json"
-	file_data, f_err := os.read_entire_file(name = path, allocator = context.allocator)
-    if f_err != nil {
-        print(DataErrors.ERROR_OPENING_FILE)
-        panic("")
+load_position_set :: proc(){
+    data, f_err := os.read_entire_file(FILE_NAME, context.allocator)
+    assert(f_err == nil, "ERROR OPENING JSON FILE")
+    // data_string := string(data) 
+    // print(data_string)
+    unmarshall_err := json.unmarshal(data, &gen_pos_set)
+    if unmarshall_err != nil {
+        print("THERE HAS BEEN A PROBLEM WITH UNMARSHALLING:")
+        print("%v", unmarshall_err)
     }
-	
-    file_string = string(file_data)
-    print(file_string)
+    print("%v", gen_pos_set.level_1.position_set_1[0])
+}
 
-    data_err := json.unmarshal(file_data, &json_struct)
-    if data_err != nil {
-        print(DataErrors.ERROR_LOADING_JSON)
-        panic("")
-    }
-    print(json_struct)
 
-	for p in json_struct.position_set_1{
-		print(p)
-	}
-
+main :: proc(){
+    load_position_set()
 }
