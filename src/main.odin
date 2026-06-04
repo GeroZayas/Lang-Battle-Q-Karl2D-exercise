@@ -7,7 +7,6 @@ TODO(gero):
 
 package Lang_Battle_Q_game
 
-import "core:strings"
 import k2 "../../karl2d"
 import "base:runtime"
 import "core:encoding/json"
@@ -17,6 +16,7 @@ import "core:math/linalg"
 import "core:math/rand"
 import "core:mem"
 import "core:os"
+import "core:strings"
 import "core:time"
 
 Rect :: k2.Rect
@@ -59,7 +59,7 @@ QuizBoxState :: enum {
 }
 
 // --------------------------------------
-// Bookmark ***
+// 
 Quiz_Box :: struct {
 	index:     int,
 	questions: string,
@@ -72,7 +72,7 @@ Quiz_Boxes :: struct {
 	boxes_array: [dynamic]Quiz_Box,
 }
 
-quiz_boxes: Quiz_Boxes // Bookmark ***
+quiz_boxes: Quiz_Boxes // 
 current_quiz_box: ^Quiz_Box
 // --------------------------------------
 
@@ -169,7 +169,7 @@ current_mouse := false
 pressed := false
 
 // QUIZ DOCS
-// Bookmark ***
+// 
 quiz_doc_level_1: QuizDoc
 quiz_doc_level_2: QuizDoc
 quiz_doc_level_3: QuizDoc
@@ -180,8 +180,10 @@ q_i: string
 current_question: string
 message: string
 show_answers: bool = false
+correct_answers : int = 0
+must_pass_level : bool = false
 
-screen_state := Screen_Type.Game
+screen_state := Screen_Type.Intro
 
 PLAYER_VELOCITY: f32 = 300
 ENEMY_SPEED: u8 = 5
@@ -259,6 +261,13 @@ init :: proc() {
 		"Lang Battle Q!",
 		options = {window_mode = .Windowed_Resizable},
 	)
+
+	sep := strings.repeat("=", 150)
+	defer delete(sep)
+
+	// LOADS THE POSITIONS SETS
+	load_position_set()
+
 	change_screens = false
 	show_response_message_timer = false
 
@@ -384,14 +393,13 @@ init :: proc() {
 	grpiw :: get_random_pos_in_world
 
 	switch current_level {
-	case 1:
-		position_set_avail: [3]Position_Set_4 = {
-			position_set_4_1,
-			position_set_4_2,
-			position_set_4_3,
-		}
 
-		// Bookmark ***
+	case 1:
+		position_set_avail :[3][dynamic][2]f32= {
+			gen_pos_set.level_1.position_set_1,
+			gen_pos_set.level_1.position_set_2,
+			gen_pos_set.level_1.position_set_3
+		}
 
 		// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
 		// and draw in those positions
@@ -403,39 +411,37 @@ init :: proc() {
 				index = 0,
 				questions = "Q1",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[0],
+				pos = rand_position_set[0],
 				answered = .NOT_ANSWERED,
 			},
 			Quiz_Box {
 				index = 1,
 				questions = "Q2",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[1],
+				pos = rand_position_set[1],
 				answered = .NOT_ANSWERED,
 			},
 			Quiz_Box {
 				index = 2,
 				questions = "Q3",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[2],
+				pos = rand_position_set[2],
 				answered = .NOT_ANSWERED,
 			},
 			Quiz_Box {
 				index = 3,
 				questions = "Q4",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[3],
+				pos = rand_position_set[3],
 				answered = .NOT_ANSWERED,
 			},
 		)
 	case 2:
-		position_set_avail: [1]Position_Set_6 = { 	// TODO: change to [3]
-			position_set_6_1,
-			// position_set_6_2,
-			// position_set_6_3,
+		position_set_avail :[3][dynamic][2]f32= {
+			gen_pos_set.level_2.position_set_1,
+			gen_pos_set.level_2.position_set_2,
+			gen_pos_set.level_2.position_set_3
 		}
-
-		// Bookmark ***
 
 		// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
 		// and draw in those positions
@@ -446,59 +452,123 @@ init :: proc() {
 				index = 0,
 				questions = "Q1",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[0],
+				pos = rand_position_set[0],
 				answered = .NOT_ANSWERED,
 			},
 			Quiz_Box {
 				index = 1,
 				questions = "Q2",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[1],
+				pos = rand_position_set[1],
 				answered = .NOT_ANSWERED,
 			},
 			Quiz_Box {
 				index = 2,
 				questions = "Q3",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[2],
+				pos = rand_position_set[2],
 				answered = .NOT_ANSWERED,
 			},
 			Quiz_Box {
 				index = 3,
 				questions = "Q4",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[3],
+				pos = rand_position_set[3],
 				answered = .NOT_ANSWERED,
 			},
 			Quiz_Box {
 				index = 4,
 				questions = "Q5",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[4],
+				pos = rand_position_set[4],
 				answered = .NOT_ANSWERED,
 			},
 			Quiz_Box {
 				index = 5,
 				questions = "Q6",
 				tex = quiz_box_tex,
-				pos = rand_position_set.positions[5],
+				pos = rand_position_set[5],
+				answered = .NOT_ANSWERED,
+			},
+		)
+	case 3:
+	position_set_avail :[3][dynamic][2]f32= {
+			gen_pos_set.level_3.position_set_1,
+			gen_pos_set.level_3.position_set_2,
+			gen_pos_set.level_3.position_set_3
+		}
+
+		// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
+		// and draw in those positions
+		rand_position_set := rand.choice(position_set_avail[:])
+		append(
+			&quiz_boxes.boxes_array,
+			Quiz_Box {
+				index = 0,
+				questions = "Q1",
+				tex = quiz_box_tex,
+				pos = rand_position_set[0],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 1,
+				questions = "Q2",
+				tex = quiz_box_tex,
+				pos = rand_position_set[1],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 2,
+				questions = "Q3",
+				tex = quiz_box_tex,
+				pos = rand_position_set[2],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 3,
+				questions = "Q4",
+				tex = quiz_box_tex,
+				pos = rand_position_set[3],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 4,
+				questions = "Q5",
+				tex = quiz_box_tex,
+				pos = rand_position_set[4],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 5,
+				questions = "Q6",
+				tex = quiz_box_tex,
+				pos = rand_position_set[5],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 6,
+				questions = "Q7",
+				tex = quiz_box_tex,
+				pos = rand_position_set[6],
+				answered = .NOT_ANSWERED,
+			},
+			Quiz_Box {
+				index = 7,
+				questions = "Q8",
+				tex = quiz_box_tex,
+				pos = rand_position_set[7],
 				answered = .NOT_ANSWERED,
 			},
 		)
 
 	}
 
-
-	// if current_level == 2 { 	// ***
-
-	// }
-
-	// if current_level == 3 { 	// ***
-
-	// }
-
-	// fmt.println(quiz_boxes)
-
+	print(sep)
+	log.debug("CREATED the quiz boxes array")
+	for b in quiz_boxes.boxes_array {
+		print(b)
+	}
+	print(sep)
 
 	// INIT SCOREBOARD
 	score_board = {
@@ -526,6 +596,7 @@ step :: proc() -> bool {
 
 update :: proc() {
 	colliders = make([dynamic]RectId, context.temp_allocator)
+	assert(current_level == 1, "LEVEL CHANGED")
 
 	if game_finished {
 		return
@@ -539,7 +610,12 @@ update :: proc() {
 		}
 	}
 
+	//  ========= MAIN SCREEN GAME ===========
+
 	if screen_state == .Game {
+		if must_pass_level == true {
+			current_level += 1
+		}
 
 		clear(&colliders)
 
@@ -565,7 +641,7 @@ update :: proc() {
 		odin_movement: Vec2
 
 		if k2.key_went_down(.F2) do UI_DEBUG = !UI_DEBUG
-		if k2.key_went_down(.F3) do screen_state = .Quiz_Popup
+		// if k2.key_went_down(.F3) do screen_state = .Quiz_Popup
 		if k2.key_went_down(.F4) do screen_state = .DevOne
 
 		// screen_state
@@ -617,13 +693,8 @@ update :: proc() {
 					box.pos,
 					origin = k2.rect_center(k2.get_texture_rect(box.tex)),
 				)
-				box_rect := k2.rect_from_pos_size(
-					{
-						box.pos[0] - f32(box.tex.width) / 4,
-						box.pos[1] - 5 - f32(box.tex.height) / 4,
-					},
-					{f32(box.tex.width) / 2, f32(box.tex.height) / 2},
-				)
+
+				box_rect := get_box_rect_from_position(box)
 				rect_id := RectId{box_rect, box.index}
 
 				if UI_DEBUG do k2.draw_rect(box_rect, k2.RED)
@@ -768,6 +839,7 @@ update :: proc() {
 
 	k2.present()
 
+	must_pass_level = false
 	previous_mouse = current_mouse
 }
 
@@ -863,6 +935,7 @@ ui_debug_options :: proc() {
 	ENEMY_SPEED = 0
 
 	mouse_pos := k2.get_mouse_position()
+	fps := 1.0 / k2.get_frame_time()
 
 	// THIS IS THE PROC we use to create new cpqs (quiz boxes) wherever we
 	// click on the screen :)
@@ -870,10 +943,14 @@ ui_debug_options :: proc() {
 
 	player_pos_text := fmt.tprintfln("PLAYER position %v", player.pos)
 	mouse_pos_text := fmt.tprintfln("MOUSE position %v", mouse_pos)
-
+	fps_text := fmt.tprintfln("FPS %v", fps)
+	esc_text_hint := "To SAVE new CPQs locations hit ESCAPE key"
 	k2.draw_text(player_pos_text, {20, 110}, 20, k2.YELLOW)
 	k2.draw_text(mouse_pos_text, {20, 150}, 20, k2.YELLOW)
+	k2.draw_text(fps_text, {20, 190}, 20, k2.YELLOW)
+	k2.draw_text(esc_text_hint, {20, 230}, 20, k2.YELLOW)
 
+	// Bookmark ***
 	if k2.key_went_down(.Escape) {
 		positions_json_file_ptr, err := os.open(positions_json_file_path, {.Write})
 
@@ -885,7 +962,7 @@ ui_debug_options :: proc() {
 
 		if len(data_from_file) > 0 {
 			log.debug("File is NOT empty\n", string(data_from_file))
-			empty_data : []byte
+			empty_data: []byte
 			empty_data = {0}
 			// NOTE: The idea here is to clear the file up so as to put new positions:
 			// that's why I use the write_entire_file here (although it might not be correct to do it like this)
@@ -964,9 +1041,7 @@ show_quiz_screen :: proc() {
 	}
 
 	current_question = current_quiz_doc.all_questions[q_i].question
-
 	current_correct_answer = current_quiz_doc.all_questions[q_i].correct_answer
-
 	answer_buttons = show_answer_buttons(current_quiz_doc.all_questions[q_i].answers)
 
 	for answer_btn in answer_buttons {
@@ -1016,11 +1091,34 @@ show_quiz_screen :: proc() {
 		show_response_message_timer = true
 		response_message_timer = 1
 		if message_after_selection == "CORRECT" {
+			correct_answers += 1
 			correct_response_sound = k2.create_sound_from_audio_buffer(audio_quiz_correct)
 			k2.set_sound_volume(correct_response_sound, 0.4)
 			k2.play_sound(correct_response_sound)
 			append(&playing_sounds, correct_response_sound)
 			player.score += 1
+			if correct_answers == question_index + 1 {
+				must_pass_level = true
+			}
+
+			switch current_level {
+				case 1:
+					if correct_answers == 4 {
+						must_pass_level = true
+				}
+				case 2:
+					if correct_answers == 6 {
+						must_pass_level = true
+				}
+				case 3:
+					if correct_answers == 8 {
+						must_pass_level = true
+				}
+			}
+			print("current_level:")
+			print(current_level)
+			print("question_index + 1:")
+			print(question_index + 1)
 		}
 		if message_after_selection == "WRONG" {
 			wrong_response_sound = k2.create_sound_from_audio_buffer(audio_quiz_wrong)
@@ -1188,7 +1286,7 @@ show_dev_one_screen :: proc() {
 
 create_quiz_box_cpq_with_left_click :: proc() {
 	add_message := "Left click + CPQ"
-	remove_message := "Right click - CPQ"
+	remove_message := "Right click on any \nCPQ to pop last inserted"
 	mouse_position := k2.get_mouse_position()
 
 	k2.draw_text(add_message, mouse_position + {25, 30}, 20, k2.LIGHT_GREEN)
@@ -1196,7 +1294,7 @@ create_quiz_box_cpq_with_left_click :: proc() {
 
 	if k2.mouse_button_went_down(.Left) {
 		new_box := Quiz_Box {
-			index     = 1 + len(quiz_boxes.boxes_array),
+			index     = len(quiz_boxes.boxes_array),
 			questions = "a question here",
 			tex       = quiz_box_tex,
 			pos       = k2.get_mouse_position(),
@@ -1211,7 +1309,53 @@ create_quiz_box_cpq_with_left_click :: proc() {
 		log.debug("positions_array --->>", positions_array)
 
 		append(&quiz_boxes.boxes_array, new_box)
+		log.info("====================================================")
+		for elem in quiz_boxes.boxes_array {
+			print(elem)
+		}
+		log.info("====================================================")
 	}
+	if k2.mouse_button_went_down(.Right) {
+		current_mouse = true
+		for box in quiz_boxes.boxes_array {
+			box_rect := get_box_rect_from_position(box)
+			if mouse_on_collider(box_rect) {
+				log.debug("MOUSE IS COLLIDING")
+				log.debug("With id:", box.index)
+				log.debug("ABOUT TO REMOVE => ", box.index)
+				r := pop_dynamic_array(&quiz_boxes.boxes_array)
+				log.debug("REMOVED => ", box.index)
+			} else {
+				current_mouse = false
+			}
+		}
+	}
+
+
+	/*
+	else if k2.mouse_button_went_down(.Right) {
+		log.debug("CLICKING RIGHT")
+
+		for box in quiz_boxes.boxes_array {
+			if len(quiz_boxes.boxes_array) > 0 {
+				log.debug("LENGTH OF quiz_boxes.boxes_array:", len(quiz_boxes.boxes_array))
+				box_rect := get_box_rect_from_position(box)
+				if mouse_on_collider(box_rect) {
+					log.debug("MOUSE IS COLLIDING")
+					log.debug("With id:", box.index)
+					log.debug("ABOUT TO REMOVE => ", box.index)
+					ordered_remove_dynamic_array(&quiz_boxes.boxes_array, box.index)
+					log.debug("REMOVED => ", box.index)
+				}
+			} else {
+				print("DRAW BEFORE DELETING")
+			}
+		}
+	}
+
+	*/
+
+
 }
 
 write_position_file :: proc(file_ptr: ^os.File, data: string) {
@@ -1285,6 +1429,11 @@ mouse_on_button :: proc(button_rect: k2.Rect) -> bool {
 }
 
 // Explicit overloadding so I can use the same proc with another name :)
+
+
+/*
+**RETURNS** True if the mouse is **colliding** with the box rectangle 
+*/
 mouse_on_collider :: proc {
 	mouse_on_button,
 }
@@ -1300,4 +1449,16 @@ show_message_after_selection :: proc(message: string) {
 	}
 	k2.draw_rect({150, f32(settings.SCREEN_HEIGHT - 205), 300, 60}, k2.WHITE)
 	k2.draw_text(message, {160, f32(settings.SCREEN_HEIGHT - 200)}, 50, color)
+}
+
+/*
+**Returns** a Rectangle with position and size from the given Quix_Box in the input
+This exists to be abel to draw the rectangles of the Quiz Boxes in the Map 
+*/
+get_box_rect_from_position :: proc(box: Quiz_Box) -> k2.Rect {
+	box_rect := k2.rect_from_pos_size(
+		{box.pos[0] - f32(box.tex.width) / 4, box.pos[1] - 5 - f32(box.tex.height) / 4},
+		{f32(box.tex.width) / 2, f32(box.tex.height) / 2},
+	)
+	return box_rect
 }
