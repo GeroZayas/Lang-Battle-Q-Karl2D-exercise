@@ -3,134 +3,30 @@
 package Lang_Battle_Q_game
 
 import k2 "../../karl2d"
+import "core:encoding/json"
+import "core:os"
 
 
-Position_Set_4 :: struct {
-	positions: [4]k2.Vec2,
+FILE_NAME :: `C:\Users\Gero\Documents\Gero_Coding\Odin\Lang-Battle-Q-Karl2D-exercise\scratch_buffer\positions.json`
+
+
+Position_Set :: struct {
+    position_set_1: [dynamic][2]f32,
+    position_set_2: [dynamic][2]f32,
+    position_set_3: [dynamic][2]f32
+
 }
 
-Position_Set_6 :: struct {
-	positions: [6]k2.Vec2,
+GeneralPosSet :: struct{
+    level_1 : Position_Set,
+    level_2 : Position_Set,
+    level_3 : Position_Set
 }
 
-Position_Set_8 :: struct {
-	positions: [8]k2.Vec2,
-}
+gen_pos_set: GeneralPosSet
 
 screen_w := f32(settings.SCREEN_WIDTH)
 screen_h := f32(settings.SCREEN_HEIGHT)
-
-//  LEVEL 1 ========================================
-
-position_set_4_1 := Position_Set_4 {
-	positions = {
-		{screen_w * 0.10, screen_h * 0.20},
-		{screen_w * 0.20, screen_h * 0.55},
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-	},
-}
-
-position_set_4_2 := Position_Set_4 {
-	positions = {
-		{screen_w * 0.23, screen_h * 0.23},
-		{screen_w * 0.71, screen_h * 0.57},
-		{screen_w * 0.47, screen_h * 0.88},
-		{screen_w * 0.91, screen_h * 0.13},
-	},
-}
-
-position_set_4_3 := Position_Set_4 {
-	positions = {
-		{screen_w * 0.12, screen_h * 0.88},
-		{screen_w * 0.38, screen_h * 0.72},
-		{screen_w * 0.66, screen_h * 0.28},
-		{screen_w * 0.84, screen_h * 0.54},
-	},
-}
-
-
-//  LEVEL 2 ========================================
-
-position_set_6_1 := Position_Set_6 {
-	positions = {
-		{screen_w * 0.10, screen_h * 0.20},
-		{screen_w * 0.20, screen_h * 0.55},
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-		// TODO:  CHANGE BELOW
-		{screen_w * 0.78, screen_h * 0.55},
-		{screen_w * 0.100, screen_h * 0.23},
-	},
-}
-
-position_set_6_2 := Position_Set_6 {
-	positions = {
-		{screen_w * 0.23, screen_h * 0.23},
-		{screen_w * 0.71, screen_h * 0.57},
-		{screen_w * 0.47, screen_h * 0.88},
-		{screen_w * 0.91, screen_h * 0.13},
-		// TODO:  CHANGE BELOW
-		{screen_w * 0.78, screen_h * 0.89},
-		{screen_w * 0.100, screen_h * 0.23},
-	},
-}
-
-position_set_6_3 := Position_Set_6 {
-	positions = {
-		{screen_w * 0.12, screen_h * 0.88},
-		{screen_w * 0.38, screen_h * 0.72},
-		{screen_w * 0.66, screen_h * 0.28},
-		{screen_w * 0.84, screen_h * 0.54},
-		// TODO:  CHANGE BELOW
-		{screen_w * 0.78, screen_h * 0.89},
-		{screen_w * 0.100, screen_h * 0.23},
-	},
-}
-
-//  LEVEL 3 ========================================
-
-position_set_8_1 := Position_Set_8 {
-	positions = {
-		{screen_w * 0.10, screen_h * 0.20},
-		{screen_w * 0.20, screen_h * 0.55},
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-		// TODO:  CHANGE BELOW
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-	},
-}
-
-position_set_8_2 := Position_Set_8 {
-	positions = {
-		{screen_w * 0.23, screen_h * 0.23},
-		{screen_w * 0.71, screen_h * 0.57},
-		{screen_w * 0.47, screen_h * 0.88},
-		{screen_w * 0.91, screen_h * 0.13},
-		// TODO:  CHANGE BELOW
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-	},
-}
-
-position_set_8_3 := Position_Set_8 {
-	positions = {
-		{screen_w * 0.12, screen_h * 0.88},
-		{screen_w * 0.38, screen_h * 0.72},
-		{screen_w * 0.66, screen_h * 0.28},
-		{screen_w * 0.84, screen_h * 0.54},
-		// TODO:  CHANGE BELOW
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-		{screen_w * 0.68, screen_h * 0.30},
-		{screen_w * 0.90, screen_h * 0.85},
-	},
-}
 
 // VARS for the UI
 Settings :: struct {
@@ -141,4 +37,29 @@ Settings :: struct {
 //  PROCEDURES
 calc_player_collider :: proc(player_pos: Vec2) -> k2.Rect {
 	return {player_pos.x - 30, player_pos.y - 90, 50, 50}
+}
+
+// load_position_set :: proc() -> Position_Set{
+// 	position_set : Position_Set
+
+// 	return position_set
+// }
+
+
+load_position_set :: proc(){
+    // data, f_err := os.read_entire_file(FILE_NAME, context.allocator)
+	// if f_err != nil {
+    //     print("THERE HAS BEEN AN ERROR WITH OPENING JSON FILE:")
+    //     print("%v", f_err)
+    // }
+    
+    // Doing it like this (#load) to be able to compile it to a web app later 
+    data := #load(FILE_NAME)
+
+    unmarshall_err := json.unmarshal(data, &gen_pos_set, allocator = arena_alloc)
+    if unmarshall_err != nil {
+        print("THERE HAS BEEN AN ERROR WITH UNMARSHALLING:")
+        print("%v", unmarshall_err)
+    }
+    // print("%v", gen_pos_set)
 }

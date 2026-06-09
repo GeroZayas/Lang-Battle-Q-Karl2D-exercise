@@ -1,0 +1,35 @@
+// raddbg 0.9.25 project file
+
+recent_file: path: "main.odin"
+recent_file: path: "../../karl2d/karl2d.odin"
+recent_file: path: "../../../../../Downloads/odin-windows-amd64-dev-2026-05/dist/base/runtime/error_checks.odin"
+recent_file: path: "main.exe"
+recent_file: path: "src/main.odin"
+recent_file: path: "../main.odin"
+recent_file: path: "../../../../../Downloads/odin-windows-amd64-dev-2026-05/dist/base/runtime/core_builtin.odin"
+recent_file: path: "../../../../../Downloads/odin-windows-amd64-dev-2026-05/dist/core/fmt/fmt_os.odin"
+recent_file: path: "../../../../../Downloads/odin-windows-amd64-dev-2026-05/dist/core/encoding/json/unmarshal.odin"
+recent_file: path: "D:/a/_work/1/s/src/vctools/crt/vcruntime/src/string/amd64/memcpy.asm"
+recent_file: path: "../../../../../Downloads/odin-windows-amd64-dev-2026-05/dist/base/runtime/default_temp_allocator_arena.odin"
+recent_file: path: "../../../../../Downloads/odin-windows-amd64-dev-2026-05/dist/core/log/file_console_logger.odin"
+recent_file: path: "../../../../../Downloads/odin-windows-amd64-dev-2026-05/dist/core/mem/tracking_allocator.odin"
+recent_file: path: "../../../../../Downloads/odin-windows-amd64-dev-2026-05/dist/core/mem/alloc.odin"
+recent_file: path: "../../../../../Downloads/odin-windows-amd64-dev-2026-05/dist/base/runtime/heap_allocator.odin"
+recent_file: path: "D:/a/_work/1/s/src/vctools/crt/vcruntime/src/string/amd64/memset.asm"
+recent_file: path: "../Lang-Battle-Q-Karl2D-exercise.exe"
+debug_info:
+{
+  path: "C:/Users/Gero/Documents/Gero_Coding/Odin/Lang-Battle-Q-Karl2D-exercise/Lang-Battle-Q-Karl2D-exercise.pdb"
+  timestamp: 66215539673785
+}
+debug_info:
+{
+  path: "C:/Users/Gero/Documents/Gero_Coding/Odin/Lang-Battle-Q-Karl2D-exercise/src/main.pdb"
+  timestamp: 66216447159279
+}
+target:
+{
+  executable: "main.exe"
+  working_directory: ""
+  enabled: 1
+}

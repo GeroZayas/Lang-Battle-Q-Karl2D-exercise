@@ -1,34 +1,50 @@
-NOTES:
-------
-...
-FEAT - DEV:
-The idea is to have a SCREEN for devs where we can pick up and drag the CPQs into the game area and then  hit a button and save that position for a given level
+NOTES and ROADMAP:
+------------------
+Creo que la mecánica sería:
+	- tener un procedimiento que nos retorne un pos set para cada uno de los niveles
+	  y en el init() ya tendríamos los 3 niveles con sus respectivos pos sets
+	  y solo tendríamos que hacer un switch en update() para ver en qué nivel estamos 
+	  en el current frame 
 
-- Need to Delete/Erase with Right Click
-- 
+========================================================
+IN PROGRESS:
+-------------
+- (feat) Jump to level 2 after completing positively the 1st level
+	-> the problem is that we load the level in init()
 
-************************************************
 
-1st -> click and add a CPQ right there on the clicked position
+========================================================
+TO DO:
+-----
+- (feat) Save positions as json file
 
-************************************************
 
-2nd -> save that as a json
-3rd -> load that json and draw it on the screen
+========================================================
+BACKLOG:
+--------
 
-...
-FEAT: Level Up
+- (feat) Level Up
 	-> loading the next json file of level 2 python
 	-> add another Enemy
 	-> increase speed of enemies and of player
-...
 
-FEAT: Music streaming all the time (optionally turn off)
+- (feat) Music streaming all the time (optionally turn off)
 
-...
-FEAT: Options / Settings NEW SCREEN
+- (feat) Options / Settings NEW SCREEN
 	-> turn on/off the music
 	-> overall volume of sound effects
 
-...
-FEAT: Player -> small animation -> when it moves it leaves behind like smoke or dust or similar
+- (feat) Player -> small animation -> when it moves it leaves behind like smoke or dust or similar
+
+- (fear) Add screen or something to explain the player how to play, move and so on
+
+
+========================================================
+COMPLETED:
+----------
+- (feat) Load positions json file
+
+
+========================================================
+DEPRECATED:
+-----------
