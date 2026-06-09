@@ -1,6 +1,10 @@
 NOTES and ROADMAP:
 ------------------
-
+Creo que la mecánica sería:
+	- tener un procedimiento que nos retorne un pos set para cada uno de los niveles
+	  y en el init() ya tendríamos los 3 niveles con sus respectivos pos sets
+	  y solo tendríamos que hacer un switch en update() para ver en qué nivel estamos 
+	  en el current frame 
 
 ========================================================
 IN PROGRESS:
