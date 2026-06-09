@@ -158,7 +158,7 @@ current_correct_answer: string
 message_after_selection: string
 
 answer_buttons: [dynamic]Button
-question_index_array: [4]string
+question_index_array: [dynamic]string
 question_index: int
 
 data_level_1_python: []u8
@@ -370,7 +370,7 @@ init :: proc() {
 		score = 0,
 	}
 
-	question_index_array = {"1", "2", "3", "4"} // TODO fix this ***
+	question_index_array = {"1", "2", "3", "4", "5", "6", "7", "8"} // TODO fix this ***
 	question_index = 0
 
 	intro_title_game = {
@@ -481,10 +481,8 @@ update :: proc() {
 	case 2:
 		assert(current_level == 2, "LEVEL CHANGED")
 		must_pass_level = false
-		clear(&quiz_boxes.boxes_array)
-		correct_answers = 0
-		
 
+		
 		if len(quiz_boxes.boxes_array) == 0 {
 			// position_set_avail :[1][dynamic][2]f32= {
 			// 	gen_pos_set.level_2.position_set_1,
@@ -545,9 +543,6 @@ update :: proc() {
 	case 3:
 		assert(current_level == 3, "LEVEL CHANGED")
 		must_pass_level = false
-		clear(&quiz_boxes.boxes_array)
-		correct_answers = 0
-
 
 		position_set_avail: [1][dynamic][2]f32 = {
 			gen_pos_set.level_3.position_set_1,
@@ -1182,6 +1177,8 @@ show_quiz_screen :: proc() {
 			must_pass_level = true
 			print("********** must_pass_level = true ***************")
 			current_level += 1
+			clear(&quiz_boxes.boxes_array)
+			correct_answers = 0
 			screen_state = .TransitionLevel
 		} else {
 			screen_state = .Game
