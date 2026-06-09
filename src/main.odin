@@ -59,7 +59,7 @@ QuizBoxState :: enum {
 }
 
 // --------------------------------------
-// 
+//
 Quiz_Box :: struct {
 	index:     int,
 	questions: string,
@@ -72,7 +72,7 @@ Quiz_Boxes :: struct {
 	boxes_array: [dynamic]Quiz_Box,
 }
 
-quiz_boxes: Quiz_Boxes // 
+quiz_boxes: Quiz_Boxes //
 current_quiz_box: ^Quiz_Box
 // --------------------------------------
 
@@ -141,6 +141,7 @@ Screen_Type :: enum {
 	Settings,
 	Final_Won,
 	DevOne,
+	TransitionLevel,
 }
 
 RectId :: struct {
@@ -169,7 +170,7 @@ current_mouse := false
 pressed := false
 
 // QUIZ DOCS
-// 
+//
 quiz_doc_level_1: QuizDoc
 quiz_doc_level_2: QuizDoc
 quiz_doc_level_3: QuizDoc
@@ -180,8 +181,8 @@ q_i: string
 current_question: string
 message: string
 show_answers: bool = false
-correct_answers : int = 0
-must_pass_level : bool = false
+correct_answers: int = 0
+must_pass_level: bool = false
 
 screen_state := Screen_Type.Intro
 
@@ -244,6 +245,10 @@ wrong_response_sound: k2.Sound
 // TODO: Change the loading of this json file to use #load
 positions_json_file_path: string = "./testing_positions.json"
 positions_array: [dynamic]string
+
+
+// alias for convenience:
+grpiw :: get_random_pos_in_world
 
 
 // =============================================================================================
@@ -389,113 +394,165 @@ init :: proc() {
 	current_level = 1
 	// =============== CURRENT LEVEL ===============
 
-	// alias for convenience:
-	grpiw :: get_random_pos_in_world
+	// INIT SCOREBOARD
+	score_board = {
+		pos   = {0, 0},
+		rect  = {10, 10, 150, 70},
+		score = player.score,
+		lives = player.lives,
+		level = current_level,
+	}
+}
+
+// =============================================================================================
+
+step :: proc() -> bool {
+	if !k2.update() {
+		return false
+	}
+	update()
+	return true
+}
+
+// =============================================================================================
+// ------------------------------------- UPDATE ------------------------------------------------
+// =============================================================================================
+
+update :: proc() {
+	// This "colliders" is tp hold an array of the quiz boxes rects
+	// for us ot know when the player collisions with one of them
+	colliders = make([dynamic]RectId, context.temp_allocator)
+	
+
+	if game_finished {
+		return
+	}
 
 	switch current_level {
 
 	case 1:
-		position_set_avail :[3][dynamic][2]f32= {
-			gen_pos_set.level_1.position_set_1,
-			gen_pos_set.level_1.position_set_2,
-			gen_pos_set.level_1.position_set_3
+		must_pass_level = false
+
+		// position_set_avail :[1][dynamic][2]f32= {
+		// 	gen_pos_set.level_1.position_set_1,
+		// 	// gen_pos_set.level_1.position_set_2,
+		// 	// gen_pos_set.level_1.position_set_3
+		// }
+
+		// // We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
+		// // and draw in those positions
+		// rand_position_set := rand.choice(position_set_avail[:])
+		if len(quiz_boxes.boxes_array) == 0 {
+			log.debug(len(quiz_boxes.boxes_array))
+			append(
+				&quiz_boxes.boxes_array,
+				Quiz_Box {
+					index = 0,
+					questions = "Q1",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_1.position_set_1[0],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 1,
+					questions = "Q2",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_1.position_set_1[1],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 2,
+					questions = "Q3",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_1.position_set_1[2],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 3,
+					questions = "Q4",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_1.position_set_1[3],
+					answered = .NOT_ANSWERED,
+				},
+			)
+			log.debug(len(quiz_boxes.boxes_array))
 		}
 
-		// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
-		// and draw in those positions
-		rand_position_set := rand.choice(position_set_avail[:])
-
-		append(
-			&quiz_boxes.boxes_array,
-			Quiz_Box {
-				index = 0,
-				questions = "Q1",
-				tex = quiz_box_tex,
-				pos = rand_position_set[0],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 1,
-				questions = "Q2",
-				tex = quiz_box_tex,
-				pos = rand_position_set[1],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 2,
-				questions = "Q3",
-				tex = quiz_box_tex,
-				pos = rand_position_set[2],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 3,
-				questions = "Q4",
-				tex = quiz_box_tex,
-				pos = rand_position_set[3],
-				answered = .NOT_ANSWERED,
-			},
-		)
 	case 2:
-		position_set_avail :[3][dynamic][2]f32= {
-			gen_pos_set.level_2.position_set_1,
-			gen_pos_set.level_2.position_set_2,
-			gen_pos_set.level_2.position_set_3
-		}
+		assert(current_level == 2, "LEVEL CHANGED")
+		must_pass_level = false
+		clear(&quiz_boxes.boxes_array)
+		correct_answers = 0
+		
 
-		// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
-		// and draw in those positions
-		rand_position_set := rand.choice(position_set_avail[:])
-		append(
-			&quiz_boxes.boxes_array,
-			Quiz_Box {
-				index = 0,
-				questions = "Q1",
-				tex = quiz_box_tex,
-				pos = rand_position_set[0],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 1,
-				questions = "Q2",
-				tex = quiz_box_tex,
-				pos = rand_position_set[1],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 2,
-				questions = "Q3",
-				tex = quiz_box_tex,
-				pos = rand_position_set[2],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 3,
-				questions = "Q4",
-				tex = quiz_box_tex,
-				pos = rand_position_set[3],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 4,
-				questions = "Q5",
-				tex = quiz_box_tex,
-				pos = rand_position_set[4],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 5,
-				questions = "Q6",
-				tex = quiz_box_tex,
-				pos = rand_position_set[5],
-				answered = .NOT_ANSWERED,
-			},
-		)
+		if len(quiz_boxes.boxes_array) == 0 {
+			// position_set_avail :[1][dynamic][2]f32= {
+			// 	gen_pos_set.level_2.position_set_1,
+			// 	// gen_pos_set.level_2.position_set_2,
+			// 	// gen_pos_set.level_2.position_set_3
+			// }
+
+			// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
+			// and draw in those positions
+			// rand_position_set := rand.choice(position_set_avail[:])
+			append(
+				&quiz_boxes.boxes_array,
+				Quiz_Box {
+					index = 0,
+					questions = "Q1",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_2.position_set_1[0],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 1,
+					questions = "Q2",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_2.position_set_1[1],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 2,
+					questions = "Q3",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_2.position_set_1[2],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 3,
+					questions = "Q4",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_2.position_set_1[3],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 4,
+					questions = "Q5",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_2.position_set_1[4],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 5,
+					questions = "Q6",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_2.position_set_1[5],
+					answered = .NOT_ANSWERED,
+				},
+			)
+
+		}
 	case 3:
-	position_set_avail :[3][dynamic][2]f32= {
+		assert(current_level == 3, "LEVEL CHANGED")
+		must_pass_level = false
+		clear(&quiz_boxes.boxes_array)
+		correct_answers = 0
+
+
+		position_set_avail: [1][dynamic][2]f32 = {
 			gen_pos_set.level_3.position_set_1,
-			gen_pos_set.level_3.position_set_2,
-			gen_pos_set.level_3.position_set_3
+			// gen_pos_set.level_3.position_set_2,
+			// gen_pos_set.level_3.position_set_3
 		}
 
 		// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
@@ -563,44 +620,6 @@ init :: proc() {
 
 	}
 
-	print(sep)
-	log.debug("CREATED the quiz boxes array")
-	for b in quiz_boxes.boxes_array {
-		print(b)
-	}
-	print(sep)
-
-	// INIT SCOREBOARD
-	score_board = {
-		pos   = {0, 0},
-		rect  = {10, 10, 150, 70},
-		score = player.score,
-		lives = player.lives,
-		level = current_level,
-	}
-}
-
-// =============================================================================================
-
-step :: proc() -> bool {
-	if !k2.update() {
-		return false
-	}
-	update()
-	return true
-}
-
-// =============================================================================================
-// ------------------------------------- UPDATE ------------------------------------------------
-// =============================================================================================
-
-update :: proc() {
-	colliders = make([dynamic]RectId, context.temp_allocator)
-	assert(current_level == 1, "LEVEL CHANGED")
-
-	if game_finished {
-		return
-	}
 
 	for ps_idx := 0; ps_idx < len(playing_sounds); ps_idx += 1 {
 		if !k2.sound_is_playing(playing_sounds[ps_idx]) {
@@ -613,10 +632,12 @@ update :: proc() {
 	//  ========= MAIN SCREEN GAME ===========
 
 	if screen_state == .Game {
-		if must_pass_level == true {
-			current_level += 1
-		}
-
+		// TODO: probably delete all this:
+		// if must_pass_level == true {
+		// 	log.debug("************ ------->>>>>>>>> GOT HERE ")
+		// 	current_level += 1
+		// 	 // ***
+		// }
 		clear(&colliders)
 
 		k2.clear(CLEAR_COLOR)
@@ -833,13 +854,15 @@ update :: proc() {
 		player.lives = 3
 		player.score = 0
 		game_over_screen()
+
 	} else if screen_state == .DevOne {
 		show_dev_one_screen()
+	} else if screen_state == .TransitionLevel {
+		show_transition_level_screen()
 	}
 
 	k2.present()
 
-	must_pass_level = false
 	previous_mouse = current_mouse
 }
 
@@ -1087,6 +1110,15 @@ show_quiz_screen :: proc() {
 
 	dt := k2.get_frame_time()
 
+	total_to_pass: int
+	if current_level == 1 {
+		total_to_pass = 4
+	} else if current_level == 2 {
+		total_to_pass = 6
+	} else if current_level == 3 {
+		total_to_pass = 8
+	}
+
 	if pressed {
 		show_response_message_timer = true
 		response_message_timer = 1
@@ -1097,24 +1129,14 @@ show_quiz_screen :: proc() {
 			k2.play_sound(correct_response_sound)
 			append(&playing_sounds, correct_response_sound)
 			player.score += 1
-			if correct_answers == question_index + 1 {
-				must_pass_level = true
-			}
 
-			switch current_level {
-				case 1:
-					if correct_answers == 4 {
-						must_pass_level = true
-				}
-				case 2:
-					if correct_answers == 6 {
-						must_pass_level = true
-				}
-				case 3:
-					if correct_answers == 8 {
-						must_pass_level = true
-				}
-			}
+			print("=================== CORRECT ANSWERS =============")
+			log.debug(correct_answers)
+
+
+			print("=================== QUESTION INDEX + 1 =============")
+			log.debug(question_index + 1)
+
 			print("current_level:")
 			print(current_level)
 			print("question_index + 1:")
@@ -1135,16 +1157,35 @@ show_quiz_screen :: proc() {
 	}
 
 	if responded == true && response_message_timer <= 0 {
-		/*This guys is a reference to tyhe currently selected
+		/*This guy is a reference to the currently selected
 		quiz box element, GPQ, so, when responded, we change to the enum state of 
 		answered to NOT render it anymore, as we wanmt it to disappear*/
-		// ---------------------------------------------s
+		// ---------------------------------------------
+		print("================================")
+		print("================================")
+		print("================================")
+		print("================================")
+		log.debug(current_quiz_box)
 		current_quiz_box^.answered = .ANSWERED
+		log.debug(current_quiz_box)
+		print("================================")
+		print("================================")
+		print("================================")
+		print("================================")
+		print("================================")
+
 		// ---------------------------------------------
 		question_index = question_index + 1
 		message_after_selection = ""
 		// BOOK
-		screen_state = .Game
+		if correct_answers == total_to_pass {
+			must_pass_level = true
+			print("********** must_pass_level = true ***************")
+			current_level += 1
+			screen_state = .TransitionLevel
+		} else {
+			screen_state = .Game
+		}
 	}
 
 	if response_message_timer > 0 {
@@ -1179,6 +1220,18 @@ count_chars_in_question :: proc(question: string) -> int {
 		char_count += 1
 	}
 	return char_count
+}
+
+show_transition_level_screen :: proc() {
+	k2.clear(INTRO_COLOR)
+	// FONDO / Brackground
+	k2.draw_texture(background_intro.tex, {0, 0})
+	current_level_str := fmt.tprintf("GOING UP TO LEVEL: %v", current_level)
+	pos := k2.Vec2{20, 300}
+	k2.draw_text(current_level_str, pos, 50, k2.YELLOW)
+	if k2.key_went_down(.Enter) {
+		screen_state = .Game
+	}
 }
 
 // =============================================================================================
@@ -1406,11 +1459,13 @@ show_score_board :: proc() {
 
 	lives := fmt.tprintf("LIVES: %v", player.lives)
 	score := fmt.tprintf("SCORE: %v", player.score)
+	level := fmt.tprintf("LEVEL: %v", current_level)
 	x := score_board.rect.x
 	y := score_board.rect.y
 	text_color := k2.YELLOW
-	k2.draw_text(lives, {x + 40, y + 30}, 20, text_color)
-	k2.draw_text(score, {x + 40, y + 55}, 20, text_color)
+	k2.draw_text(lives, {x + 40, y + 22}, 15, text_color)
+	k2.draw_text(score, {x + 40, y + 47}, 15, text_color)
+	k2.draw_text(level, {x + 40, y + 72}, 15, text_color)
 }
 
 // =============================================================================================
