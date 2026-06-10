@@ -158,7 +158,7 @@ current_correct_answer: string
 message_after_selection: string
 
 answer_buttons: [dynamic]Button
-question_index_array: [4]string
+question_index_array: [dynamic]string
 question_index: int
 
 data_level_1_python: []u8
@@ -370,7 +370,7 @@ init :: proc() {
 		score = 0,
 	}
 
-	question_index_array = {"1", "2", "3", "4"} // TODO fix this ***
+	question_index_array = {"1", "2", "3", "4", "5", "6", "7", "8"} // TODO fix this ***
 	question_index = 0
 
 	intro_title_game = {
@@ -391,7 +391,7 @@ init :: proc() {
 	}
 
 	// =============== CURRENT LEVEL ===============
-	current_level = 1
+	current_level = 2
 	// =============== CURRENT LEVEL ===============
 
 	// INIT SCOREBOARD
@@ -422,7 +422,7 @@ update :: proc() {
 	// This "colliders" is tp hold an array of the quiz boxes rects
 	// for us ot know when the player collisions with one of them
 	colliders = make([dynamic]RectId, context.temp_allocator)
-	
+
 
 	if game_finished {
 		return
@@ -481,9 +481,7 @@ update :: proc() {
 	case 2:
 		assert(current_level == 2, "LEVEL CHANGED")
 		must_pass_level = false
-		clear(&quiz_boxes.boxes_array)
-		correct_answers = 0
-		
+
 
 		if len(quiz_boxes.boxes_array) == 0 {
 			// position_set_avail :[1][dynamic][2]f32= {
@@ -545,79 +543,78 @@ update :: proc() {
 	case 3:
 		assert(current_level == 3, "LEVEL CHANGED")
 		must_pass_level = false
-		clear(&quiz_boxes.boxes_array)
-		correct_answers = 0
 
-
-		position_set_avail: [1][dynamic][2]f32 = {
-			gen_pos_set.level_3.position_set_1,
-			// gen_pos_set.level_3.position_set_2,
-			// gen_pos_set.level_3.position_set_3
-		}
+		// position_set_avail: [1][dynamic][2]f32 = {
+		// 	gen_pos_set.level_3.position_set_1,
+		// 	gen_pos_set.level_3.position_set_2,
+		// 	gen_pos_set.level_3.position_set_3
+		// }
 
 		// We have 3 (or more) sets of positions for the quiz boxes, randomly choose from them
 		// and draw in those positions
-		rand_position_set := rand.choice(position_set_avail[:])
-		append(
-			&quiz_boxes.boxes_array,
-			Quiz_Box {
-				index = 0,
-				questions = "Q1",
-				tex = quiz_box_tex,
-				pos = rand_position_set[0],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 1,
-				questions = "Q2",
-				tex = quiz_box_tex,
-				pos = rand_position_set[1],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 2,
-				questions = "Q3",
-				tex = quiz_box_tex,
-				pos = rand_position_set[2],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 3,
-				questions = "Q4",
-				tex = quiz_box_tex,
-				pos = rand_position_set[3],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 4,
-				questions = "Q5",
-				tex = quiz_box_tex,
-				pos = rand_position_set[4],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 5,
-				questions = "Q6",
-				tex = quiz_box_tex,
-				pos = rand_position_set[5],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 6,
-				questions = "Q7",
-				tex = quiz_box_tex,
-				pos = rand_position_set[6],
-				answered = .NOT_ANSWERED,
-			},
-			Quiz_Box {
-				index = 7,
-				questions = "Q8",
-				tex = quiz_box_tex,
-				pos = rand_position_set[7],
-				answered = .NOT_ANSWERED,
-			},
-		)
+		// rand_position_set := rand.choice(position_set_avail[:])
+		if len(quiz_boxes.boxes_array) == 0 {
 
+			append(
+				&quiz_boxes.boxes_array,
+				Quiz_Box {
+					index = 0,
+					questions = "Q1",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_3.position_set_1[0],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 1,
+					questions = "Q2",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_3.position_set_1[1],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 2,
+					questions = "Q3",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_3.position_set_1[2],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 3,
+					questions = "Q4",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_3.position_set_1[3],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 4,
+					questions = "Q5",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_3.position_set_1[4],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 5,
+					questions = "Q6",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_3.position_set_1[5],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 6,
+					questions = "Q7",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_3.position_set_1[6],
+					answered = .NOT_ANSWERED,
+				},
+				Quiz_Box {
+					index = 7,
+					questions = "Q8",
+					tex = quiz_box_tex,
+					pos = gen_pos_set.level_3.position_set_1[7],
+					answered = .NOT_ANSWERED,
+				},
+			)
+		}
 	}
 
 
@@ -1182,6 +1179,8 @@ show_quiz_screen :: proc() {
 			must_pass_level = true
 			print("********** must_pass_level = true ***************")
 			current_level += 1
+			clear(&quiz_boxes.boxes_array)
+			correct_answers = 0
 			screen_state = .TransitionLevel
 		} else {
 			screen_state = .Game
@@ -1193,7 +1192,9 @@ show_quiz_screen :: proc() {
 		show_response_message_timer = false
 	}
 
-	if question_index > 3 {
+	// Using total_to_pass here as the max of correct anwers to
+
+	if question_index > total_to_pass {
 		question_index = 0
 	}
 

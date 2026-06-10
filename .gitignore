@@ -3,6 +3,4 @@ base/
 core/
 examples/
 src/debug4
-src/main.exe
-src/main.pdb
-src/main.rdi
+
