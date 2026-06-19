@@ -4,3 +4,11 @@ core/
 examples/
 src/debug4
 
+.DS_Store
+src/main.dSYM/Contents/Resources/DWARF/main
+src/main.dSYM/Contents/Info.plist
+src/main.dSYM/Contents/Resources/Relocations/aarch64/main.yml
+src/main
+scratch_buffer/scratch_buffer.dSYM/Contents/Resources/Relocations/aarch64/scratch_buffer.yml
+scratch_buffer/scratch_buffer.dSYM/Contents/Resources/DWARF/scratch_buffer
+scratch_buffer/scratch_buffer.dSYM/Contents/Info.plist

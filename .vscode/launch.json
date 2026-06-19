@@ -48,7 +48,7 @@
       "type": "lldb",
       "request": "launch",
       "name": "Debug Odin LLDB",
-      "program": "${workspaceFolder}/main",
+      "program": "${workspaceFolder}/src/main",
       "args": [],
       "cwd": "${workspaceFolder}"
     }

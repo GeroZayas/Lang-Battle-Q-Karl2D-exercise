@@ -1,4 +1,5 @@
 #+feature dynamic-literals
+
 /*
 TODO(gero):
 - feat: hide already visited and responded `cpq`
@@ -6,6 +7,7 @@ TODO(gero):
 */
 
 package Lang_Battle_Q_game
+
 
 import k2 "../../karl2d"
 import "base:runtime"
@@ -260,12 +262,15 @@ grpiw :: get_random_pos_in_world
 // ------------------------------------- INIT ------------------------------------------------
 // =============================================================================================
 init :: proc() {
+	fmt.printfln("%v, %v", settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT)
+
 	k2.init(
 		settings.SCREEN_WIDTH,
 		settings.SCREEN_HEIGHT,
 		"Lang Battle Q!",
 		options = {window_mode = .Windowed_Resizable},
 	)
+
 
 	sep := strings.repeat("=", 150)
 	defer delete(sep)
@@ -407,6 +412,7 @@ init :: proc() {
 // =============================================================================================
 
 step :: proc() -> bool {
+
 	if !k2.update() {
 		return false
 	}
@@ -423,6 +429,9 @@ update :: proc() {
 	// for us ot know when the player collisions with one of them
 	colliders = make([dynamic]RectId, context.temp_allocator)
 
+	fps := 1.0 / k2.get_frame_time()
+	// assert(fps > 60.0)
+	fmt.printfln("fps %v", fps)
 
 	if game_finished {
 		return
@@ -955,7 +964,10 @@ ui_debug_options :: proc() {
 	ENEMY_SPEED = 0
 
 	mouse_pos := k2.get_mouse_position()
+	
 	fps := 1.0 / k2.get_frame_time()
+	// assert(fps > 60.0)
+	fmt.printfln("fps %v", fps)
 
 	// THIS IS THE PROC we use to create new cpqs (quiz boxes) wherever we
 	// click on the screen :)
@@ -1155,7 +1167,7 @@ show_quiz_screen :: proc() {
 
 	if responded == true && response_message_timer <= 0 {
 		/*This guy is a reference to the currently selected
-		quiz box element, GPQ, so, when responded, we change to the enum state of 
+		quiz box element, GPQ, so, when responded, we change to the enum state of
 		answered to NOT render it anymore, as we wanmt it to disappear*/
 		// ---------------------------------------------
 		print("================================")
@@ -1488,7 +1500,7 @@ mouse_on_button :: proc(button_rect: k2.Rect) -> bool {
 
 
 /*
-**RETURNS** True if the mouse is **colliding** with the box rectangle 
+**RETURNS** True if the mouse is **colliding** with the box rectangle
 */
 mouse_on_collider :: proc {
 	mouse_on_button,
@@ -1509,7 +1521,7 @@ show_message_after_selection :: proc(message: string) {
 
 /*
 **Returns** a Rectangle with position and size from the given Quix_Box in the input
-This exists to be abel to draw the rectangles of the Quiz Boxes in the Map 
+This exists to be abel to draw the rectangles of the Quiz Boxes in the Map
 */
 get_box_rect_from_position :: proc(box: Quiz_Box) -> k2.Rect {
 	box_rect := k2.rect_from_pos_size(

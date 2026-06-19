@@ -1,16 +1,24 @@
 NOTES and ROADMAP:
 ------------------
-Creo que la mecánica sería:
-	- tener un procedimiento que nos retorne un pos set para cada uno de los niveles
-	  y en el init() ya tendríamos los 3 niveles con sus respectivos pos sets
-	  y solo tendríamos que hacer un switch en update() para ver en qué nivel estamos 
-	  en el current frame 
+
+the goal is to make it bigger
+	- a problem is the background texture
+		- we could try fitting it to a rect to be able to tranform it's size
+	- the sprites are small in this screen
+		- we could try to do the same as in Space Cat where they just Zoom with the Camera
+		- I think i would really like to use the camera
+	- I think I need to reflect on why in Space cat Karl is using a update() and then draw()
+		- why separate?
+
+
+
+
+
+
 
 ========================================================
 IN PROGRESS:
 -------------
-- (feat) Jump to level 2 after completing positively the 1st level
-	-> the problem is that we load the level in init()
 
 
 ========================================================
@@ -24,7 +32,6 @@ BACKLOG:
 --------
 
 - (feat) Level Up
-	-> loading the next json file of level 2 python
 	-> add another Enemy
 	-> increase speed of enemies and of player
 

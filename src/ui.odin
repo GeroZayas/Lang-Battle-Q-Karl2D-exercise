@@ -7,22 +7,22 @@ import "core:encoding/json"
 import "core:os"
 
 
-FILE_NAME :: `C:\Users\Gero\Documents\Gero_Coding\Odin\Lang-Battle-Q-Karl2D-exercise\scratch_buffer\positions.json`
+WINDOWS_FILE_NAME :: `C:\Users\Gero\Documents\Gero_Coding\Odin\Lang-Battle-Q-Karl2D-exercise\scratch_buffer\positions.json`
+MAC_FILE_NAME :: `../scratch_buffer/positions.json`
 
 
 Position_Set :: struct {
-    position_set_1: [dynamic][2]f32,
-    position_set_2: [dynamic][2]f32,
-    position_set_3: [dynamic][2]f32
-
+	position_set_1: [dynamic][2]f32,
+	position_set_2: [dynamic][2]f32,
+	position_set_3: [dynamic][2]f32,
 }
 
-GeneralPosSet :: struct{
-    level_1 : Position_Set,
-    level_2 : Position_Set,
-    level_3 : Position_Set
+GeneralPosSet :: struct {
+	level_1: Position_Set,
+	level_2: Position_Set,
+	level_3: Position_Set,
 }
-
+	
 gen_pos_set: GeneralPosSet
 
 screen_w := f32(settings.SCREEN_WIDTH)
@@ -46,20 +46,20 @@ calc_player_collider :: proc(player_pos: Vec2) -> k2.Rect {
 // }
 
 
-load_position_set :: proc(){
-    // data, f_err := os.read_entire_file(FILE_NAME, context.allocator)
+load_position_set :: proc() {
+	// data, f_err := os.read_entire_file(FILE_NAME, context.allocator)
 	// if f_err != nil {
-    //     print("THERE HAS BEEN AN ERROR WITH OPENING JSON FILE:")
-    //     print("%v", f_err)
-    // }
-    
-    // Doing it like this (#load) to be able to compile it to a web app later 
-    data := #load(FILE_NAME)
+	//     print("THERE HAS BEEN AN ERROR WITH OPENING JSON FILE:")
+	//     print("%v", f_err)
+	// }
 
-    unmarshall_err := json.unmarshal(data, &gen_pos_set, allocator = arena_alloc)
-    if unmarshall_err != nil {
-        print("THERE HAS BEEN AN ERROR WITH UNMARSHALLING:")
-        print("%v", unmarshall_err)
-    }
-    // print("%v", gen_pos_set)
+	// Doing it like this (#load) to be able to compile it to a web app later
+	data := #load(MAC_FILE_NAME)
+
+	unmarshall_err := json.unmarshal(data, &gen_pos_set, allocator = arena_alloc)
+	if unmarshall_err != nil {
+		print("THERE HAS BEEN AN ERROR WITH UNMARSHALLING:")
+		print("%v", unmarshall_err)
+	}
+	// print("%v", gen_pos_set)
 }
