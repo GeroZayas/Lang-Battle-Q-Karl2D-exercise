@@ -189,7 +189,7 @@ must_pass_level: bool = false
 screen_state := Screen_Type.Intro
 
 PLAYER_VELOCITY: f32 = 300
-ENEMY_SPEED: u8 = 5
+ENEMY_SPEED: u8 = 10
 
 game_finished: bool
 current_level: int
@@ -407,35 +407,7 @@ init :: proc() {
 		lives = player.lives,
 		level = current_level,
 	}
-}
 
-// =============================================================================================
-
-step :: proc() -> bool {
-
-	if !k2.update() {
-		return false
-	}
-	update()
-	return true
-}
-
-// =============================================================================================
-// ------------------------------------- UPDATE ------------------------------------------------
-// =============================================================================================
-
-update :: proc() {
-	// This "colliders" is tp hold an array of the quiz boxes rects
-	// for us ot know when the player collisions with one of them
-	colliders = make([dynamic]RectId, context.temp_allocator)
-
-	fps := 1.0 / k2.get_frame_time()
-	// assert(fps > 60.0)
-	fmt.printfln("fps %v", fps)
-
-	if game_finished {
-		return
-	}
 
 	switch current_level {
 
@@ -625,8 +597,37 @@ update :: proc() {
 			)
 		}
 	}
+}
 
+// =============================================================================================
 
+step :: proc() -> bool {
+
+	if !k2.update() {
+		return false
+	}
+	update()
+	return true
+}
+
+// =============================================================================================
+// ------------------------------------- UPDATE ------------------------------------------------
+// =============================================================================================
+
+update :: proc() {
+	// This "colliders" is tp hold an array of the quiz boxes rects
+	// for us ot know when the player collisions with one of them
+	colliders = make([dynamic]RectId, context.temp_allocator)
+
+	fps := 1.0 / k2.get_frame_time()
+	// assert(fps > 60.0)
+	fmt.printfln("fps %v", fps)
+
+	if game_finished {
+		return
+	}
+
+	// getting rid of the unused sounds in the moment
 	for ps_idx := 0; ps_idx < len(playing_sounds); ps_idx += 1 {
 		if !k2.sound_is_playing(playing_sounds[ps_idx]) {
 			k2.destroy_sound(playing_sounds[ps_idx])
@@ -683,7 +684,7 @@ update :: proc() {
 			// TODO: change this so that we make sure it is always the same as
 			// when first determined, bc it could change and then it would
 			// be slower after leaving the debug screen
-			ENEMY_SPEED = 5
+			ENEMY_SPEED = 10
 		}
 
 		if k2.key_is_held(.Up) || k2.key_is_held(.W) {
@@ -829,7 +830,7 @@ update :: proc() {
 
 		if odin.dir == .East && odin.pos.x > f32(settings.SCREEN_WIDTH) {
 			odin.pos.x = 0
-			odin.pos.y = f32(rand.int_range(20, settings.SCREEN_HEIGHT))
+			odin.pos.y = f32(rand.int_range(50, settings.SCREEN_HEIGHT))
 		}
 
 		// ENEMY MOVEMENT
@@ -867,9 +868,11 @@ update :: proc() {
 		show_transition_level_screen()
 	}
 
+	previous_mouse = current_mouse
+	
+
 	k2.present()
 
-	previous_mouse = current_mouse
 }
 
 // =============================================================================================
@@ -964,7 +967,7 @@ ui_debug_options :: proc() {
 	ENEMY_SPEED = 0
 
 	mouse_pos := k2.get_mouse_position()
-	
+
 	fps := 1.0 / k2.get_frame_time()
 	// assert(fps > 60.0)
 	fmt.printfln("fps %v", fps)
